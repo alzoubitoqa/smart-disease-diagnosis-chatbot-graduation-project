@@ -1,0 +1,248 @@
+{
+  "Drug Reaction": {
+    "precaution_1": "stop irritation",
+    "precaution_2": "consult nearest hospital",
+    "precaution_3": "stop taking drug",
+    "precaution_4": "follow up"
+  },
+  "Malaria": {
+    "precaution_1": "Consult nearest hospital",
+    "precaution_2": "avoid oily food",
+    "precaution_3": "avoid non veg food",
+    "precaution_4": "keep mosquitos out"
+  },
+  "Allergy": {
+    "precaution_1": "apply calamine",
+    "precaution_2": "cover area with bandage",
+    "precaution_3": "Protect Skin from Ice Burns",
+    "precaution_4": "use ice to compress itching"
+  },
+  "Hypothyroidism": {
+    "precaution_1": "reduce stress",
+    "precaution_2": "exercise",
+    "precaution_3": "eat healthy",
+    "precaution_4": "get proper sleep"
+  },
+  "Psoriasis": {
+    "precaution_1": "wash hands with warm soapy water",
+    "precaution_2": "stop bleeding using pressure",
+    "precaution_3": "consult doctor",
+    "precaution_4": "salt baths"
+  },
+  "GERD": {
+    "precaution_1": "avoid fatty spicy food",
+    "precaution_2": "avoid lying down after eating",
+    "precaution_3": "maintain healthy weight",
+    "precaution_4": "exercise"
+  },
+  "Chronic cholestasis": {
+    "precaution_1": "cold baths",
+    "precaution_2": "anti itch medicine",
+    "precaution_3": "consult doctor",
+    "precaution_4": "eat healthy"
+  },
+  "hepatitis A": {
+    "precaution_1": "Consult nearest hospital",
+    "precaution_2": "wash hands through",
+    "precaution_3": "avoid fatty spicy food",
+    "precaution_4": "medication"
+  },
+  "Osteoarthristis": {
+    "precaution_1": "acetaminophen",
+    "precaution_2": "consult nearest hospital",
+    "precaution_3": "follow up",
+    "precaution_4": "salt baths"
+  },
+  "(vertigo) Paroymsal  Positional Vertigo": {
+    "precaution_1": "lie down",
+    "precaution_2": "avoid sudden change in body",
+    "precaution_3": "avoid abrupt head movment",
+    "precaution_4": "relax"
+  },
+  "Hypoglycemia": {
+    "precaution_1": "lie down on side",
+    "precaution_2": "check in pulse",
+    "precaution_3": "drink sugary drinks",
+    "precaution_4": "consult doctor"
+  },
+  "Acne": {
+    "precaution_1": "bath twice",
+    "precaution_2": "avoid fatty spicy food",
+    "precaution_3": "drink plenty of water",
+    "precaution_4": "avoid too many products"
+  },
+  "Diabetes ": {
+    "precaution_1": "have balanced diet",
+    "precaution_2": "exercise",
+    "precaution_3": "consult doctor",
+    "precaution_4": "follow up"
+  },
+  "Impetigo": {
+    "precaution_1": "soak affected area in warm water",
+    "precaution_2": "use antibiotics",
+    "precaution_3": "remove scabs with wet compressed cloth",
+    "precaution_4": "consult doctor"
+  },
+  "Hypertension ": {
+    "precaution_1": "meditation",
+    "precaution_2": "salt baths",
+    "precaution_3": "reduce stress",
+    "precaution_4": "get proper sleep"
+  },
+  "Peptic ulcer diseae": {
+    "precaution_1": "avoid fatty spicy food",
+    "precaution_2": "consume probiotic food",
+    "precaution_3": "eliminate milk",
+    "precaution_4": "limit alcohol"
+  },
+  "Dimorphic hemmorhoids(piles)": {
+    "precaution_1": "avoid fatty spicy food",
+    "precaution_2": "consume witch hazel",
+    "precaution_3": "warm bath with epsom salt",
+    "precaution_4": "consume alovera juice"
+  },
+  "Common Cold": {
+    "precaution_1": "drink vitamin c rich drinks",
+    "precaution_2": "take vapour",
+    "precaution_3": "avoid cold food",
+    "precaution_4": "keep fever in check"
+  },
+  "Chicken pox": {
+    "precaution_1": "use neem in bathing ",
+    "precaution_2": "consume neem leaves",
+    "precaution_3": "take vaccine",
+    "precaution_4": "avoid public places"
+  },
+  "Cervical spondylosis": {
+    "precaution_1": "use heating pad or cold pack",
+    "precaution_2": "exercise",
+    "precaution_3": "take otc pain reliver",
+    "precaution_4": "consult doctor"
+  },
+  "Hyperthyroidism": {
+    "precaution_1": "eat healthy",
+    "precaution_2": "massage",
+    "precaution_3": "use lemon balm",
+    "precaution_4": "take radioactive iodine treatment"
+  },
+  "Urinary tract infection": {
+    "precaution_1": "drink plenty of water",
+    "precaution_2": "increase vitamin c intake",
+    "precaution_3": "drink cranberry juice",
+    "precaution_4": "take probiotics"
+  },
+  "Varicose veins": {
+    "precaution_1": "lie down flat and raise the leg high",
+    "precaution_2": "use oinments",
+    "precaution_3": "use vein compression",
+    "precaution_4": "dont stand still for long"
+  },
+  "AIDS": {
+    "precaution_1": "avoid open cuts",
+    "precaution_2": "wear ppe if possible",
+    "precaution_3": "consult doctor",
+    "precaution_4": "follow up"
+  },
+  "Paralysis (brain hemorrhage)": {
+    "precaution_1": "massage",
+    "precaution_2": "eat healthy",
+    "precaution_3": "exercise",
+    "precaution_4": "consult doctor"
+  },
+  "Typhoid": {
+    "precaution_1": "eat high calorie vegitables",
+    "precaution_2": "antiboitic therapy",
+    "precaution_3": "consult doctor",
+    "precaution_4": "medication"
+  },
+  "Hepatitis B": {
+    "precaution_1": "consult nearest hospital",
+    "precaution_2": "vaccination",
+    "precaution_3": "eat healthy",
+    "precaution_4": "medication"
+  },
+  "Fungal infection": {
+    "precaution_1": "bath twice",
+    "precaution_2": "use detol or neem in bathing water",
+    "precaution_3": "keep infected area dry",
+    "precaution_4": "use clean cloths"
+  },
+  "Hepatitis C": {
+    "precaution_1": "Consult nearest hospital",
+    "precaution_2": "vaccination",
+    "precaution_3": "eat healthy",
+    "precaution_4": "medication"
+  },
+  "Migraine": {
+    "precaution_1": "meditation",
+    "precaution_2": "reduce stress",
+    "precaution_3": "use poloroid glasses in sun",
+    "precaution_4": "consult doctor"
+  },
+  "Bronchial Asthma": {
+    "precaution_1": "switch to loose cloothing",
+    "precaution_2": "take deep breaths",
+    "precaution_3": "get away from trigger",
+    "precaution_4": "seek help"
+  },
+  "Alcoholic hepatitis": {
+    "precaution_1": "stop alcohol consumption",
+    "precaution_2": "consult doctor",
+    "precaution_3": "medication",
+    "precaution_4": "follow up"
+  },
+  "Jaundice": {
+    "precaution_1": "drink plenty of water",
+    "precaution_2": "consume milk thistle",
+    "precaution_3": "eat fruits and high fiberous food",
+    "precaution_4": "medication"
+  },
+  "Hepatitis E": {
+    "precaution_1": "stop alcohol consumption",
+    "precaution_2": "rest",
+    "precaution_3": "consult doctor",
+    "precaution_4": "medication"
+  },
+  "Dengue": {
+    "precaution_1": "drink papaya leaf juice",
+    "precaution_2": "avoid fatty spicy food",
+    "precaution_3": "keep mosquitos away",
+    "precaution_4": "keep hydrated"
+  },
+  "Hepatitis D": {
+    "precaution_1": "consult doctor",
+    "precaution_2": "medication",
+    "precaution_3": "eat healthy",
+    "precaution_4": "follow up"
+  },
+  "Heart attack": {
+    "precaution_1": "call ambulance",
+    "precaution_2": "chew or swallow asprin",
+    "precaution_3": "keep calm",
+    "precaution_4": "seat the person in a comfortable position (half-sitting) and monitor breathing until the ambulance arrives"
+  },
+  "Pneumonia": {
+    "precaution_1": "consult doctor",
+    "precaution_2": "medication",
+    "precaution_3": "rest",
+    "precaution_4": "follow up"
+  },
+  "Arthritis": {
+    "precaution_1": "exercise",
+    "precaution_2": "use hot and cold therapy",
+    "precaution_3": "try acupuncture",
+    "precaution_4": "massage"
+  },
+  "Gastroenteritis": {
+    "precaution_1": "stop eating solid food for while",
+    "precaution_2": "try taking small sips of water",
+    "precaution_3": "rest",
+    "precaution_4": "ease back into eating"
+  },
+  "Tuberculosis": {
+    "precaution_1": "cover mouth",
+    "precaution_2": "consult doctor",
+    "precaution_3": "medication",
+    "precaution_4": "rest"
+  }
+}

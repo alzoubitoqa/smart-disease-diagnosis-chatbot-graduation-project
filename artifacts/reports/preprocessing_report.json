@@ -1,0 +1,16 @@
+{
+  "total_samples": 4920,
+  "train_samples": 3538,
+  "val_samples": 691,
+  "test_samples": 691,
+  "num_classes": 41,
+  "vocab_size": 134,
+  "severity_vocab_size": 8,
+  "max_sequence_length": 17,
+  "unique_symptoms": 132,
+  "avg_symptoms_per_sample": 7.4487804878048784,
+  "avg_severity": 4.163801571709234,
+  "unique_patterns": 305,
+  "pattern_overlap": 304,
+  "timestamp": "2026-04-04 22:44:18"
+}

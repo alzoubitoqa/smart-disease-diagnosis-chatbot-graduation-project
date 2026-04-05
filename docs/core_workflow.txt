@@ -1,0 +1,239 @@
+1) تجهيز البيئة الافتراضية
+
+عرض نسخ Python الموجودة:
+
+py -0p
+
+إنشاء البيئة الافتراضية باستخدام Python 3.10:
+
+py -3.10 -m venv .venv
+
+تفعيل البيئة الافتراضية في PowerShell:
+
+.venv\Scripts\Activate.ps1
+
+إذا صار عندك مشكلة Execution Policy:
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+تحديث pip:
+
+python -m pip install --upgrade pip
+
+تثبيت المتطلبات:
+
+pip install -r requirements.txt
+
+إذا احتجتي تثبيت الحزم الأساسية اللي استخدمناها:
+
+pip install fastapi uvicorn tensorflow==2.13.0 python-dotenv groq passlib[bcrypt] python-jose email-validator
+
+إذا صار تعارض bcrypt/passlib:
+
+pip uninstall bcrypt passlib -y
+pip install passlib==1.7.4 bcrypt==4.0.1
+2) تشغيل واختبار طبقة الـ Knowledge Base
+
+بناء ملفات الـ JSON من الداتا:
+
+python src/knowledge_base/build_kb.py
+
+أو اختبار ملف الـ knowledge base نفسه:
+
+python src/knowledge_base/knowledge_base.py
+
+الملفات الناتجة داخل:
+
+artifacts/knowledge_base/
+
+وتتضمن:
+
+disease_descriptions.json
+disease_precautions.json
+symptom_severity.json
+3) اختبار تحميل المودل
+
+اختبار تحميل المودل:
+
+python tests/test_model_load.py
+
+إذا اشتغل لازم يطبع:
+
+Model loaded successfully
+4) تشغيل الـ Backend الحالي
+
+الأمر الصحيح الحالي لتشغيل الـ backend:
+
+python -m uvicorn src.api.main:app --reload
+
+وليس:
+
+uvicorn src.api.api_main:app --reload
+
+لأن الملف الحالي عندك هو:
+
+src/api/main.py
+
+بعد التشغيل:
+
+Swagger:
+http://127.0.0.1:8000/docs
+5) أهم Endpoints الموجودة حاليًا في الـ Backend
+Authentication
+Register:
+POST /api/auth/register
+Login:
+POST /api/auth/login
+Profile
+Read profile:
+GET /api/profile/{user_id}
+Update profile:
+PUT /api/profile/{user_id}
+Symptoms
+Get dataset symptoms:
+GET /api/symptoms
+Prediction
+Basic prediction:
+POST /api/predict
+History-aware prediction:
+POST /api/predict/history-aware
+6) أمثلة JSON جاهزة للتجربة من Swagger
+Register
+{
+  "email": "toq@example.com",
+  "password": "12345678"
+}
+Login
+{
+  "email": "toq@example.com",
+  "password": "12345678"
+}
+Update Profile
+{
+  "age": 21,
+  "gender": "female",
+  "medical_history": "none"
+}
+Basic Predict
+{
+  "user_text": "I have fever and headache",
+  "symptoms": [
+    { "symptom": "fever", "severity": 4 },
+    { "symptom": "headache", "severity": 3 }
+  ]
+}
+History-Aware Predict
+{
+  "user_id": "1",
+  "user_text": "I have itching and skin rash with nodal skin eruptions and dischromic patches",
+  "symptoms": [
+    { "symptom": "itching", "severity": 1 },
+    { "symptom": "skin_rash", "severity": 2 },
+    { "symptom": "nodal_skin_eruptions", "severity": 2 },
+    { "symptom": "dischromic_patches", "severity": 1 }
+  ]
+}
+7) تشغيل الـ Frontend الحالي
+
+من داخل مجلد الفرونت:
+
+cd disease-chatbot-frontend
+
+تثبيت الحزم:
+
+npm install
+
+تشغيل الواجهة:
+
+npm run dev
+
+واجهة الفرونت تفتح غالبًا على:
+
+http://localhost:5173
+8) ترتيب التشغيل الكامل الحالي للمشروع
+Terminal 1 — Backend
+
+من مجلد gp_2:
+
+.venv\Scripts\Activate.ps1
+python -m uvicorn src.api.main:app --reload
+Terminal 2 — Frontend
+
+من مجلد disease-chatbot-frontend:
+
+npm run dev
+9) ترتيب التشغيل من الصفر حسب الهيكل الحالي
+
+إذا بدك تشغلي المشروع كامل من البداية:
+
+داخل backend
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python src/knowledge_base/build_kb.py
+python tests/test_model_load.py
+python -m uvicorn src.api.main:app --reload
+داخل frontend
+cd disease-chatbot-frontend
+npm install
+npm run dev
+10) ملفات backend المهمة الحالية
+
+الهيكل الفعلي اللي اشتغلنا عليه:
+
+src/
+  api/
+    routes/
+      auth.py
+      profile.py
+      prediction.py
+      symptoms.py
+    main.py
+  core/
+    config.py
+    database.py
+    groq_client.py
+    security.py
+  knowledge_base/
+    build_kb.py
+    knowledge_base.py
+  ml/
+    inference.py
+    train_bilstm.py
+  services/
+    auth_service.py
+    history_service.py
+    prediction_service.py
+    profile_service.py
+    symptom_parser_service.py
+    symptom_service.py
+11) ملاحظات مهمة جدًا حسب شغلك الحالي
+شغلات قديمة صارت غير معتمدة
+
+هذه الأوامر ليست المعتمدة الآن حسب الـ backend الحالي:
+
+python src/preprocess.py
+python src/validate_data.py
+python src/inspect_sample.py
+python src/predict_disease.py
+python src/train_baseline_rf.py
+python src/evaluate_group_kfold_bilstm.py
+python src/predict_disease_history.py
+python src/review_history.py
+streamlit run streamlit_app.py
+uvicorn src.api.api_main:app --reload
+
+بعضها قديم، وبعضها يخص هيكل سابق، وبعضها مو مستخدم في النسخة الحالية المبنية على FastAPI + React.
+
+12) الخلاصة العملية النهائية
+شغلي فقط هذول في الوضع الحالي:
+Terminal 1 — Backend
+.venv\Scripts\Activate.ps1
+python -m uvicorn src.api.main:app --reload
+Terminal 2 — Frontend
+cd disease-chatbot-frontend
+npm run dev
+13) إذا بدك rebuild سريع بعد أي مشكلة
+python src/knowledge_base/build_kb.py
+python tests/test_model_load.py
+python -m uvicorn src.api.main:app --reload

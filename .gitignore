@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Models & artifacts
+artifacts/models/
+artifacts/db/
+
+# Env
+.env
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store

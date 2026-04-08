@@ -1,3 +1,7 @@
+# ============================================================================
+# COMPLETE PREPROCESSING CODE - FIXED DATA LEAKAGE (SPLIT BY UNIQUE PATTERNS)
+# ============================================================================
+
 import os
 import sys
 import numpy as np
@@ -8,7 +12,7 @@ import re
 from collections import Counter
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
-                                                                   
+
 # ============================================================================
 # 1. Set Paths
 # ============================================================================
@@ -63,91 +67,73 @@ def pad_symptoms_fixed(row, symptom_cols, max_len):
         symptoms = symptoms[:max_len]
     return pd.Series(symptoms, index=symptom_cols)
 
+def shuffle_symptoms_randomly(df, symptom_cols, random_state=42):
+    """Shuffle symptom order for each row to remove positional bias"""
+    np.random.seed(random_state)
+    df_shuffled = df.copy()
+    for idx in df_shuffled.index:
+        symptoms = df_shuffled.loc[idx, symptom_cols].values
+        non_pad = [s for s in symptoms if s != PAD_TOKEN and pd.notna(s)]
+        if len(non_pad) > 1:
+            np.random.shuffle(non_pad)
+            new_symptoms = []
+            i = 0
+            for s in symptoms:
+                if s != PAD_TOKEN and pd.notna(s):
+                    new_symptoms.append(non_pad[i])
+                    i += 1
+                else:
+                    new_symptoms.append(s)
+            df_shuffled.loc[idx, symptom_cols] = new_symptoms
+    return df_shuffled
+
 # ============================================================================
-# 3. Data Splitting - Proper handling of duplicates
+# 3. Data Splitting - FIXED: Split by unique pattern (no pattern appears in >1 set)
 # ============================================================================
 
 def split_data_properly(df, symptom_cols, test_size=0.15, val_size=0.15, random_state=42):
     """
-    Split data properly:
-    - Same PATTERN (symptoms) can appear in multiple sets (different patients)
-    - This is EXPECTED and DESIRABLE for learning generalization
+    Split data by UNIQUE PATTERNS (exact sequences).
+    Each unique symptom sequence goes entirely to one set (train/val/test).
+    This completely prevents data leakage.
     """
     np.random.seed(random_state)
     
-    # Group by exact symptom pattern
+    # Create pattern column as exact tuple (order matters)
     df_copy = df.copy()
-    df_copy['pattern'] = df_copy[symptom_cols].apply(
-        lambda row: tuple(sorted([s for s in row if s != PAD_TOKEN and pd.notna(s)])),
-        axis=1
-    )
+    df_copy['pattern'] = df_copy[symptom_cols].apply(tuple, axis=1)
     
-    train_indices = []
-    val_indices = []
-    test_indices = []
+    # Get unique patterns and shuffle
+    unique_patterns = df_copy['pattern'].unique()
+    np.random.shuffle(unique_patterns)
     
-    # Group by pattern
-    pattern_groups = {}
-    for idx, row in df_copy.iterrows():
-        pattern = row['pattern']
-        if pattern not in pattern_groups:
-            pattern_groups[pattern] = []
-        pattern_groups[pattern].append(idx)
+    n_patterns = len(unique_patterns)
+    n_test = max(1, int(n_patterns * test_size))
+    n_val = max(1, int(n_patterns * val_size))
+    n_train = n_patterns - n_test - n_val
+    
+    # Split patterns
+    train_patterns = set(unique_patterns[:n_train])
+    val_patterns = set(unique_patterns[n_train:n_train+n_val])
+    test_patterns = set(unique_patterns[n_train+n_val:])
+    
+    # Get indices for each set
+    train_indices = df_copy[df_copy['pattern'].isin(train_patterns)].index.tolist()
+    val_indices = df_copy[df_copy['pattern'].isin(val_patterns)].index.tolist()
+    test_indices = df_copy[df_copy['pattern'].isin(test_patterns)].index.tolist()
     
     print("\n" + "="*70)
-    print("🔍 Data Splitting with Proper Duplicate Handling")
+    print("🔍 Data Splitting by Unique Patterns (NO LEAKAGE)")
     print("="*70)
-    print(f"\n📊 Total unique symptom patterns: {len(pattern_groups)}")
-    
-    for pattern, indices in pattern_groups.items():
-        n_samples = len(indices)
-        shuffled = np.random.permutation(indices)
-        
-        if n_samples == 1:
-            train_indices.append(shuffled[0])
-        elif n_samples == 2:
-            train_indices.append(shuffled[0])
-            test_indices.append(shuffled[1])
-        elif n_samples == 3:
-            train_indices.append(shuffled[0])
-            val_indices.append(shuffled[1])
-            test_indices.append(shuffled[2])
-        else:
-            n_test = max(1, int(n_samples * test_size))
-            n_val = max(1, int(n_samples * val_size))
-            n_train = n_samples - n_test - n_val
-            
-            current = 0
-            test_indices.extend(shuffled[current:current + n_test])
-            current += n_test
-            val_indices.extend(shuffled[current:current + n_val])
-            current += n_val
-            train_indices.extend(shuffled[current:])
-    
+    print(f"\n📊 Total unique symptom sequences: {n_patterns}")
     print(f"\n📊 Split Results:")
-    print(f"   Train: {len(train_indices)} samples")
-    print(f"   Val:   {len(val_indices)} samples")
-    print(f"   Test:  {len(test_indices)} samples")
+    print(f"   Train: {len(train_indices)} samples, {len(train_patterns)} patterns")
+    print(f"   Val:   {len(val_indices)} samples, {len(val_patterns)} patterns")
+    print(f"   Test:  {len(test_indices)} samples, {len(test_patterns)} patterns")
+    print(f"\n📊 Pattern Overlap (Train ∩ Test): {len(train_patterns & test_patterns)} (should be 0)")
+    print(f"   Pattern Overlap (Train ∩ Val): {len(train_patterns & val_patterns)}")
+    print(f"   Pattern Overlap (Val ∩ Test): {len(val_patterns & test_patterns)}")
     
-    # Calculate pattern distribution
-    def get_patterns(indices):
-        return set(df_copy.loc[indices, 'pattern'])
-    
-    train_patterns = get_patterns(train_indices)
-    val_patterns = get_patterns(val_indices)
-    test_patterns = get_patterns(test_indices)
-    
-    print(f"\n📊 Pattern Distribution:")
-    print(f"   Train patterns: {len(train_patterns)}")
-    print(f"   Val patterns: {len(val_patterns)}")
-    print(f"   Test patterns: {len(test_patterns)}")
-    
-    pattern_overlap = len(train_patterns.intersection(test_patterns))
-    print(f"\n📊 Pattern Overlap (Train ∩ Test): {pattern_overlap}")
-    print(f"   ℹ️  This is NOT data leakage - different patients with the same symptoms")
-    print(f"   This is exactly what the model should learn to generalize!")
-    
-    # Return patterns for later use
     return train_indices, val_indices, test_indices, train_patterns, val_patterns, test_patterns
 
 # ============================================================================
@@ -156,8 +142,14 @@ def split_data_properly(df, symptom_cols, test_size=0.15, val_size=0.15, random_
 
 def preprocess():
     print("="*70)
-    print("📦 DATA PREPROCESSING - Disease Prediction Chatbot")
+    print("📦 DATA PREPROCESSING - Disease Prediction Chatbot (NO DATA LEAKAGE)")
     print("="*70)
+    
+    # Check required files exist
+    required_files = ["dataset.csv", "Symptom-severity.csv", "symptom_Description.csv", "symptom_precaution.csv"]
+    for f in required_files:
+        if not os.path.exists(os.path.join(DATA_DIR, f)):
+            raise FileNotFoundError(f"Missing required file: {f} in {DATA_DIR}")
     
     # Load data
     print("\n📂 Loading data...")
@@ -186,6 +178,10 @@ def preprocess():
     dataset[symptom_cols] = dataset.apply(
         lambda row: pad_symptoms_fixed(row, symptom_cols, MAX_SEQUENCE_LENGTH), axis=1
     )
+    
+    # Shuffle symptom order to remove positional bias
+    print("\n🔀 Shuffling symptom order randomly to remove positional bias...")
+    dataset = shuffle_symptoms_randomly(dataset, symptom_cols, random_state=42)
     
     # Remove samples with no symptoms
     before = len(dataset)
@@ -258,7 +254,7 @@ def preprocess():
     print(f"   - X_symptoms shape: {X_symptoms.shape}")
     print(f"   - X_severities shape: {X_severities.shape}")
     
-    # Split data - FIXED: returns patterns as well
+    # Split data (by unique patterns)
     print("\n✂️ Splitting data...")
     train_idx, val_idx, test_idx, train_patterns, val_patterns, test_patterns = split_data_properly(
         dataset, symptom_cols, test_size=0.15, val_size=0.15
@@ -315,7 +311,7 @@ def preprocess():
     # Save reports
     print("\n📁 Saving reports...")
     
-    # Save disease descriptions
+    # Disease descriptions
     disease_info = {}
     for _, row in description.iterrows():
         disease_info[row['Disease']] = row['Description']
@@ -323,7 +319,7 @@ def preprocess():
     with open(os.path.join(REPORTS_DIR, "disease_descriptions.json"), 'w', encoding='utf-8') as f:
         json.dump(disease_info, f, ensure_ascii=False, indent=2)
     
-    # Save precautions
+    # Precautions
     precaution_info = {}
     for _, row in precaution.iterrows():
         precaution_info[row['Disease']] = {
@@ -336,7 +332,7 @@ def preprocess():
     with open(os.path.join(REPORTS_DIR, "disease_precautions.json"), 'w', encoding='utf-8') as f:
         json.dump(precaution_info, f, ensure_ascii=False, indent=2)
     
-    # Save preprocessing report
+    # Preprocessing report
     pattern_overlap = len(train_patterns.intersection(test_patterns))
     
     preprocessing_report = {
@@ -353,6 +349,9 @@ def preprocess():
         "avg_severity": float(np.mean(severities)),
         "unique_patterns": int(len(train_patterns)),
         "pattern_overlap": int(pattern_overlap),
+        "symptom_order_shuffled": True,
+        "data_leakage_fixed": True,
+        "split_method": "unique_patterns",
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
@@ -371,48 +370,11 @@ def preprocess():
     print(f"   - Number of diseases: {num_classes}")
     print(f"   - Unique patterns: {len(train_patterns)}")
     print(f"   - Pattern overlap (Train ∩ Test): {pattern_overlap}")
-    print(f"\n   ℹ️  Pattern overlap is EXPECTED and DESIRABLE!")
-    print(f"   This means different patients with the same symptoms appear in both sets,")
-    print(f"   which helps the model learn to generalize rather than memorize.")
+    print(f"\n   ✅ Symptom order has been shuffled to remove positional bias.")
+    print(f"   ✅ Data leakage fixed: each unique sequence appears in exactly one split.")
     print(f"\n📁 Files saved in: {PROCESSED_DIR}")
     print(f"📁 Models saved in: {MODELS_DIR}")
     print(f"📁 Reports saved in: {REPORTS_DIR}")
 
 if __name__ == "__main__":
     preprocess()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    

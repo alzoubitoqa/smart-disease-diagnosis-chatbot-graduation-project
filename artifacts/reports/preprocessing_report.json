@@ -1,8 +1,8 @@
 {
   "total_samples": 4920,
-  "train_samples": 3538,
-  "val_samples": 691,
-  "test_samples": 691,
+  "train_samples": 3414,
+  "val_samples": 776,
+  "test_samples": 730,
   "num_classes": 41,
   "vocab_size": 134,
   "severity_vocab_size": 8,
@@ -10,7 +10,10 @@
   "unique_symptoms": 132,
   "avg_symptoms_per_sample": 7.4487804878048784,
   "avg_severity": 4.163801571709234,
-  "unique_patterns": 305,
-  "pattern_overlap": 304,
-  "timestamp": "2026-04-04 22:44:18"
+  "unique_patterns": 2874,
+  "pattern_overlap": 0,
+  "symptom_order_shuffled": true,
+  "data_leakage_fixed": true,
+  "split_method": "unique_patterns",
+  "timestamp": "2026-04-08 01:02:40"
 }

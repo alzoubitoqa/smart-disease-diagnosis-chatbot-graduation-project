@@ -1,35 +1,37 @@
 {
-  "timestamp": "2026-04-04 22:46:52",
+  "timestamp": "2026-04-08 01:32:34",
   "model_config": {
-    "embedding_dim": 128,
-    "lstm_units_1": 64,
-    "lstm_units_2": 32,
-    "dropout_rate": 0.3,
-    "recurrent_dropout": 0.2,
-    "l2_regularization": 0.0001,
+    "embedding_dim": 256,
+    "lstm_units_1": 128,
+    "lstm_units_2": 64,
+    "dropout_rate": 0.4,
+    "recurrent_dropout": 0.3,
+    "l2_regularization": 0.0005,
     "learning_rate": 0.001,
     "weight_decay": 0.0001,
-    "batch_size": 32,
-    "epochs": 150,
+    "batch_size": 64,
+    "epochs": 200,
     "patience": 20,
-    "augmentation_factor": 0.5
+    "augmentation_factor": 0.5,
+    "label_smoothing": 0.1,
+    "gradient_clip_norm": 1.0
   },
   "data_info": {
-    "train_samples_before_aug": 2653,
-    "train_samples_after_aug": 5307,
-    "val_samples": 691,
-    "test_samples": 691,
+    "train_samples_before_aug": 2560,
+    "train_samples_after_aug": 5121,
+    "val_samples": 776,
+    "test_samples": 730,
     "vocab_size": 134,
     "severity_vocab_size": 8,
     "num_classes": 41,
     "max_sequence_length": 17
   },
   "training_results": {
-    "train_accuracy": 0.9189749360084534,
+    "train_accuracy": 0.9951181411743164,
     "val_accuracy": 1.0,
     "test_accuracy": 1.0,
-    "train_val_gap": -0.08102506399154663,
-    "epochs_completed": 28
+    "train_val_gap": -0.004881858825683594,
+    "epochs_completed": 156
   },
   "test_metrics": {
     "test_accuracy": 1.0,
@@ -42,7 +44,7 @@
     "top2_accuracy": 1.0,
     "top3_accuracy": 1.0,
     "top5_accuracy": 1.0,
-    "correct_predictions": 691,
+    "correct_predictions": 730,
     "wrong_predictions": 0
   }
 }

@@ -21,6 +21,8 @@ Remove-Item .\artifacts\processed\* -Force
 ```
 
 لكن لأن عندك مجلد داخلي `knowledge_base`، استخدمي:
+Remove-Item .\artifacts\knowledge_base\* -Force
+
 
 ```powershell
 Remove-Item .\artifacts\processed\* -Recurse -Force
@@ -37,6 +39,9 @@ Remove-Item .\artifacts\reports\* -Recurse -Force
 ```powershell
 Remove-Item .\artifacts\db\* -Force
 ```
+
+Remove-Item .\artifacts\figures\* -Force
+
 
 ---
 

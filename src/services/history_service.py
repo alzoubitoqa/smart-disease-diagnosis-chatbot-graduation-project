@@ -11,9 +11,9 @@ def severity_number_to_label(severity: int) -> str:
     except (TypeError, ValueError):
         return "Moderate"
 
-    if severity <= 1:
+    if severity <= 2:
         return "Mild"
-    if severity == 2:
+    if severity == 5:
         return "Moderate"
     return "Severe"
 

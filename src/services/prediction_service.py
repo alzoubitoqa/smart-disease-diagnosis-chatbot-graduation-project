@@ -134,7 +134,7 @@ def normalize_payload_symptoms(payload):
     return [
         {
             "symptom": str(symptom).strip().lower().replace(" ", "_"),
-            "severity": int(getattr(payload, "default_severity", 2))
+            "severity": int(getattr(payload, "default_severity", 4))
         }
         for symptom in extracted
     ]

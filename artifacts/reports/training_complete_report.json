@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-08 01:32:34",
+  "timestamp": "2026-04-28 19:55:32",
   "model_config": {
     "embedding_dim": 256,
     "lstm_units_1": 128,
@@ -27,11 +27,11 @@
     "max_sequence_length": 17
   },
   "training_results": {
-    "train_accuracy": 0.9951181411743164,
+    "train_accuracy": 0.9964850544929504,
     "val_accuracy": 1.0,
     "test_accuracy": 1.0,
-    "train_val_gap": -0.004881858825683594,
-    "epochs_completed": 156
+    "train_val_gap": -0.0035149455070495605,
+    "epochs_completed": 191
   },
   "test_metrics": {
     "test_accuracy": 1.0,

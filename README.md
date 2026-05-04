@@ -220,9 +220,10 @@ Developed by Toqa Al-Zoubi as part of a graduation project in Artificial Intelli
 
 Focus areas:
 
-Medical diagnosis assistance
-Deep learning using BiLSTM
-History-aware inference
-FastAPI backend development
-React frontend integration
-Applied AI in healthcare support systems
+* medical diagnosis assistance
+* deep learning with BiLSTM
+* history-aware inference
+* backend API development
+* React frontend integration
+* applied AI in healthcare support systems
+

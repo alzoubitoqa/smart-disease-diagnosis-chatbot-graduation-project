@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-28 19:55:32",
+  "timestamp": "2026-05-04 04:32:45",
   "model_config": {
     "embedding_dim": 256,
     "lstm_units_1": 128,
@@ -17,34 +17,40 @@
     "gradient_clip_norm": 1.0
   },
   "data_info": {
-    "train_samples_before_aug": 2560,
-    "train_samples_after_aug": 5121,
-    "val_samples": 776,
-    "test_samples": 730,
+    "train_samples_before_aug": 3193,
+    "train_samples_after_aug": 4789,
+    "val_samples": 960,
+    "test_samples": 767,
     "vocab_size": 134,
     "severity_vocab_size": 8,
     "num_classes": 41,
+    "classes_present_in_test": 29,
     "max_sequence_length": 17
   },
   "training_results": {
-    "train_accuracy": 0.9964850544929504,
+    "train_accuracy": 0.993735671043396,
     "val_accuracy": 1.0,
     "test_accuracy": 1.0,
-    "train_val_gap": -0.0035149455070495605,
-    "epochs_completed": 191
+    "train_val_gap": -0.006264328956604004,
+    "epochs_completed": 195
   },
   "test_metrics": {
     "test_accuracy": 1.0,
-    "precision_macro": 1.0,
-    "recall_macro": 1.0,
-    "f1_macro": 1.0,
+    "precision_macro_present_classes": 1.0,
+    "recall_macro_present_classes": 1.0,
+    "f1_macro_present_classes": 1.0,
+    "precision_macro_all_classes": 0.7073170731707317,
+    "recall_macro_all_classes": 0.7073170731707317,
+    "f1_macro_all_classes": 0.7073170731707317,
     "precision_weighted": 1.0,
     "recall_weighted": 1.0,
     "f1_weighted": 1.0,
     "top2_accuracy": 1.0,
     "top3_accuracy": 1.0,
     "top5_accuracy": 1.0,
-    "correct_predictions": 730,
-    "wrong_predictions": 0
+    "correct_predictions": 767,
+    "wrong_predictions": 0,
+    "classes_present_in_test": 29,
+    "total_classes": 41
   }
 }

@@ -1,6 +1,7 @@
 # ============================================================================
 # BiLSTM MODEL WITH ADVANCED IMPROVEMENTS (FINAL VERSION)
-# Merged from Shaden, Tuqa, Ghida + Attention + Residual + Cosine Decay + Gate
+# Attention + Residual + Cosine Decay + Severity Gate
+# Fixed Evaluation for Strict Split where test set may contain fewer classes
 # ============================================================================
 
 import os
@@ -19,76 +20,111 @@ from collections import Counter
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sklearn.metrics import (
-    accuracy_score, f1_score, precision_score, recall_score,
-    classification_report, confusion_matrix, top_k_accuracy_score
+    accuracy_score,
+    f1_score,
+    precision_score,
+    recall_score,
+    classification_report,
+    confusion_matrix,
+    top_k_accuracy_score
 )
 from sklearn.utils.class_weight import compute_class_weight
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
-    Embedding, Bidirectional, LSTM, Dense, Dropout,
-    BatchNormalization, Input, Concatenate, Add, Multiply,
-    Layer, Activation
+    Embedding,
+    Bidirectional,
+    LSTM,
+    Dense,
+    Dropout,
+    BatchNormalization,
+    Input,
+    Add,
+    Multiply,
+    Layer
 )
 from tensorflow.keras.callbacks import (
-    EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+    EarlyStopping,
+    ModelCheckpoint,
+    ReduceLROnPlateau
 )
 from tensorflow.keras import regularizers
 from tensorflow.keras.optimizers import AdamW
 
+
 # ============================================================================
-# 1. Custom Layers (Attention, CosineWarmup)
+# 1. Custom Layers
 # ============================================================================
 
 class Attention(Layer):
-    """Custom attention layer for sequence weighting"""
+    """Custom attention layer for sequence weighting."""
+
     def __init__(self, **kwargs):
         super(Attention, self).__init__(**kwargs)
+
     def build(self, input_shape):
         self.W = self.add_weight(
-            name='att_weight', 
+            name="att_weight",
             shape=(input_shape[-1], 1),
-            initializer='glorot_uniform', 
+            initializer="glorot_uniform",
             trainable=True
         )
         self.b = self.add_weight(
-            name='att_bias', 
+            name="att_bias",
             shape=(input_shape[1], 1),
-            initializer='zeros', 
+            initializer="zeros",
             trainable=True
         )
         super().build(input_shape)
+
     def call(self, x):
         e = tf.keras.backend.tanh(tf.keras.backend.dot(x, self.W) + self.b)
         a = tf.keras.backend.softmax(e, axis=1)
         output = x * a
         return tf.keras.backend.sum(output, axis=1)
+
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[2])
 
+    def get_config(self):
+        return super().get_config()
+
+
 class CosineWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
-    """Cosine annealing with warmup"""
+    """Cosine annealing learning rate schedule with warmup."""
+
     def __init__(self, learning_rate_base, warmup_steps, total_steps):
         super().__init__()
         self.learning_rate_base = learning_rate_base
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
+
     def __call__(self, step):
         step = tf.cast(step, tf.float32)
+
         warmup = step / self.warmup_steps
-        cosine = 0.5 * (1 + tf.cos(math.pi * (step - self.warmup_steps) / (self.total_steps - self.warmup_steps)))
+
+        cosine = 0.5 * (
+            1 + tf.cos(
+                math.pi * (step - self.warmup_steps) /
+                (self.total_steps - self.warmup_steps)
+            )
+        )
+
         lr = tf.where(step < self.warmup_steps, warmup, cosine)
         return self.learning_rate_base * lr
+
     def get_config(self):
         return {
-            'learning_rate_base': self.learning_rate_base,
-            'warmup_steps': self.warmup_steps,
-            'total_steps': self.total_steps
+            "learning_rate_base": self.learning_rate_base,
+            "warmup_steps": self.warmup_steps,
+            "total_steps": self.total_steps
         }
 
+
 # ============================================================================
-# 2. Configuration (Enhanced)
+# 2. Configuration
 # ============================================================================
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -128,28 +164,34 @@ FINAL_MODEL_PATH = os.path.join(MODELS_DIR, "bilstm_final.keras")
 np.random.seed(42)
 tf.random.set_seed(42)
 
+
 # ============================================================================
 # 3. Data Loading
 # ============================================================================
 
 def load_data():
-    """Load processed data from artifacts"""
+    """Load processed data from artifacts."""
     print("\n📂 Loading preprocessed data...")
+
     X_symptoms_train = np.load(os.path.join(PROCESSED_DIR, "X_symptoms_train.npy"))
     X_symptoms_val = np.load(os.path.join(PROCESSED_DIR, "X_symptoms_val.npy"))
     X_symptoms_test = np.load(os.path.join(PROCESSED_DIR, "X_symptoms_test.npy"))
+
     X_severities_train = np.load(os.path.join(PROCESSED_DIR, "X_severities_train.npy"))
     X_severities_val = np.load(os.path.join(PROCESSED_DIR, "X_severities_val.npy"))
     X_severities_test = np.load(os.path.join(PROCESSED_DIR, "X_severities_test.npy"))
+
     y_train = np.load(os.path.join(PROCESSED_DIR, "y_train.npy"))
     y_val = np.load(os.path.join(PROCESSED_DIR, "y_val.npy"))
     y_test = np.load(os.path.join(PROCESSED_DIR, "y_test.npy"))
 
-    with open(os.path.join(MODELS_DIR, "symptom2idx.pkl"), 'rb') as f:
+    with open(os.path.join(MODELS_DIR, "symptom2idx.pkl"), "rb") as f:
         symptom2idx = pickle.load(f)
-    with open(os.path.join(MODELS_DIR, "severity2idx.pkl"), 'rb') as f:
+
+    with open(os.path.join(MODELS_DIR, "severity2idx.pkl"), "rb") as f:
         severity2idx = pickle.load(f)
-    with open(os.path.join(MODELS_DIR, "label_encoder.pkl"), 'rb') as f:
+
+    with open(os.path.join(MODELS_DIR, "label_encoder.pkl"), "rb") as f:
         label_encoder = pickle.load(f)
 
     print(f"   - Train: {len(X_symptoms_train)} samples")
@@ -160,46 +202,64 @@ def load_data():
     print(f"   - Severity vocabulary size: {len(severity2idx)}")
     print(f"   - Number of diseases: {len(label_encoder.classes_)}")
 
+    print(f"   - Classes present in train: {len(np.unique(y_train))}")
+    print(f"   - Classes present in validation: {len(np.unique(y_val))}")
+    print(f"   - Classes present in test: {len(np.unique(y_test))}")
+
     return {
-        'X_symptoms_train': X_symptoms_train,
-        'X_symptoms_val': X_symptoms_val,
-        'X_symptoms_test': X_symptoms_test,
-        'X_severities_train': X_severities_train,
-        'X_severities_val': X_severities_val,
-        'X_severities_test': X_severities_test,
-        'y_train': y_train,
-        'y_val': y_val,
-        'y_test': y_test,
-        'symptom2idx': symptom2idx,
-        'severity2idx': severity2idx,
-        'label_encoder': label_encoder,
-        'vocab_size': len(symptom2idx),
-        'severity_vocab_size': len(severity2idx),
-        'num_classes': len(label_encoder.classes_),
-        'max_len': X_symptoms_train.shape[1]
+        "X_symptoms_train": X_symptoms_train,
+        "X_symptoms_val": X_symptoms_val,
+        "X_symptoms_test": X_symptoms_test,
+        "X_severities_train": X_severities_train,
+        "X_severities_val": X_severities_val,
+        "X_severities_test": X_severities_test,
+        "y_train": y_train,
+        "y_val": y_val,
+        "y_test": y_test,
+        "symptom2idx": symptom2idx,
+        "severity2idx": severity2idx,
+        "label_encoder": label_encoder,
+        "vocab_size": len(symptom2idx),
+        "severity_vocab_size": len(severity2idx),
+        "num_classes": len(label_encoder.classes_),
+        "max_len": X_symptoms_train.shape[1]
     }
 
+
 # ============================================================================
-# 4. Enhanced Data Augmentation (Realistic symptom sampling)
+# 4. Enhanced Data Augmentation
 # ============================================================================
 
 def compute_symptom_distribution(X_symptoms, vocab_size):
-    """Compute empirical distribution of symptom indices (ignoring padding 0)"""
+    """Compute empirical distribution of symptom indices, ignoring padding index 0."""
     all_symptoms = X_symptoms.flatten()
     all_symptoms = all_symptoms[all_symptoms != 0]
+
     counts = np.bincount(all_symptoms, minlength=vocab_size)
-    probs = counts.astype(np.float32) / counts.sum()
+
+    if counts.sum() == 0:
+        probs = np.ones(vocab_size, dtype=np.float32) / vocab_size
+    else:
+        probs = counts.astype(np.float32) / counts.sum()
+
+    # Avoid sampling PAD as a replacement symptom
+    probs[0] = 0.0
+    probs = probs / probs.sum()
+
     return probs
 
+
 def data_augmentation(X_symptoms, X_severities, y, aug_factor=0.5):
+    """Controlled augmentation applied only to training data."""
     n_samples = len(X_symptoms)
     n_augmented = int(n_samples * aug_factor)
-    print(f"\n🔄 Performing enhanced data augmentation...")
+
+    print("\n🔄 Performing enhanced data augmentation...")
     print(f"   - Original samples: {n_samples}")
     print(f"   - Augmented samples: {n_augmented}")
 
-    vocab_size = np.max(X_symptoms) + 1
-    severity_vocab_size = np.max(X_severities) + 1
+    vocab_size = int(np.max(X_symptoms)) + 1
+    severity_vocab_size = int(np.max(X_severities)) + 1
     symptom_probs = compute_symptom_distribution(X_symptoms, vocab_size)
 
     X_symptoms_aug = list(X_symptoms)
@@ -208,21 +268,39 @@ def data_augmentation(X_symptoms, X_severities, y, aug_factor=0.5):
 
     for _ in range(n_augmented):
         idx = np.random.randint(0, n_samples)
+
         symptom_seq = X_symptoms[idx].copy()
         severity_seq = X_severities[idx].copy()
 
         symptom_positions = np.where(symptom_seq != 0)[0]
+
         if len(symptom_positions) > 0:
-            n_modify = np.random.randint(1, min(4, len(symptom_positions)))
-            modify_idx = np.random.choice(symptom_positions, n_modify, replace=False)
-            new_symptoms = np.random.choice(vocab_size, size=n_modify, p=symptom_probs)
+            upper_bound = min(4, len(symptom_positions) + 1)
+            n_modify = np.random.randint(1, upper_bound)
+
+            modify_idx = np.random.choice(
+                symptom_positions,
+                n_modify,
+                replace=False
+            )
+
+            new_symptoms = np.random.choice(
+                vocab_size,
+                size=n_modify,
+                p=symptom_probs
+            )
+
             symptom_seq[modify_idx] = new_symptoms
 
             for pos in modify_idx:
                 current_sev = severity_seq[pos]
+
                 if current_sev > 1:
                     delta = np.random.choice([-1, 0, 1], p=[0.2, 0.6, 0.2])
-                    new_sev = max(1, min(severity_vocab_size - 1, current_sev + delta))
+                    new_sev = max(
+                        1,
+                        min(severity_vocab_size - 1, current_sev + delta)
+                    )
                     severity_seq[pos] = new_sev
 
         X_symptoms_aug.append(symptom_seq)
@@ -234,21 +312,23 @@ def data_augmentation(X_symptoms, X_severities, y, aug_factor=0.5):
     y_aug = np.array(y_aug, dtype=np.int32)
 
     print(f"   - After augmentation: {len(X_symptoms_aug)} samples")
-    print(f"   - Increase: {(len(X_symptoms_aug)/n_samples - 1)*100:.1f}%")
+    print(f"   - Increase: {(len(X_symptoms_aug) / n_samples - 1) * 100:.1f}%")
+
     return X_symptoms_aug, X_severities_aug, y_aug
+
 
 # ============================================================================
 # 5. Build Enhanced BiLSTM Model
 # ============================================================================
 
 def build_enhanced_bilstm_model(data):
-    vocab_size = data['vocab_size']
-    severity_vocab_size = data['severity_vocab_size']
-    max_len = data['max_len']
-    num_classes = data['num_classes']
+    vocab_size = data["vocab_size"]
+    severity_vocab_size = data["severity_vocab_size"]
+    max_len = data["max_len"]
+    num_classes = data["num_classes"]
 
-    symptom_input = Input(shape=(max_len,), name='symptom_input')
-    severity_input = Input(shape=(max_len,), name='severity_input')
+    symptom_input = Input(shape=(max_len,), name="symptom_input")
+    severity_input = Input(shape=(max_len,), name="severity_input")
 
     symptom_emb = Embedding(
         input_dim=vocab_size,
@@ -256,7 +336,7 @@ def build_enhanced_bilstm_model(data):
         input_length=max_len,
         mask_zero=True,
         embeddings_regularizer=regularizers.l2(L2_REG),
-        name='symptom_embedding'
+        name="symptom_embedding"
     )(symptom_input)
 
     severity_emb = Embedding(
@@ -265,50 +345,90 @@ def build_enhanced_bilstm_model(data):
         input_length=max_len,
         mask_zero=True,
         embeddings_regularizer=regularizers.l2(L2_REG),
-        name='severity_embedding'
+        name="severity_embedding"
     )(severity_input)
 
-    # Multiplicative gate: severity modulates symptom embedding
-    gate = Dense(EMBEDDING_DIM, activation='sigmoid', name='severity_gate')(severity_emb)
-    combined = Multiply(name='gated_symptoms')([symptom_emb, gate])
+    # Severity-aware gate
+    gate = Dense(
+        EMBEDDING_DIM,
+        activation="sigmoid",
+        name="severity_gate"
+    )(severity_emb)
+
+    combined = Multiply(name="gated_symptoms")([symptom_emb, gate])
 
     # First BiLSTM with residual connection
     lstm1 = Bidirectional(
-        LSTM(LSTM_UNITS_1, dropout=DROPOUT_RATE, recurrent_dropout=RECURRENT_DROPOUT,
-             return_sequences=True, kernel_regularizer=regularizers.l2(L2_REG)),
-        name='bilstm_1'
+        LSTM(
+            LSTM_UNITS_1,
+            dropout=DROPOUT_RATE,
+            recurrent_dropout=RECURRENT_DROPOUT,
+            return_sequences=True,
+            kernel_regularizer=regularizers.l2(L2_REG)
+        ),
+        name="bilstm_1"
     )(combined)
-    lstm1 = Dropout(DROPOUT_RATE, name='dropout_1')(lstm1)
 
-    shortcut = Dense(lstm1.shape[-1], name='shortcut')(combined)
-    lstm1 = Add(name='residual_1')([lstm1, shortcut])
+    lstm1 = Dropout(DROPOUT_RATE, name="dropout_1")(lstm1)
+
+    shortcut = Dense(lstm1.shape[-1], name="shortcut")(combined)
+    lstm1 = Add(name="residual_1")([lstm1, shortcut])
 
     # Second BiLSTM
     lstm2 = Bidirectional(
-        LSTM(LSTM_UNITS_2, dropout=DROPOUT_RATE, recurrent_dropout=RECURRENT_DROPOUT,
-             return_sequences=True, kernel_regularizer=regularizers.l2(L2_REG)),
-        name='bilstm_2'
+        LSTM(
+            LSTM_UNITS_2,
+            dropout=DROPOUT_RATE,
+            recurrent_dropout=RECURRENT_DROPOUT,
+            return_sequences=True,
+            kernel_regularizer=regularizers.l2(L2_REG)
+        ),
+        name="bilstm_2"
     )(lstm1)
-    lstm2 = Dropout(DROPOUT_RATE, name='dropout_2')(lstm2)
+
+    lstm2 = Dropout(DROPOUT_RATE, name="dropout_2")(lstm2)
 
     # Attention layer
-    attention_output = Attention(name='attention')(lstm2)
-    bn = BatchNormalization(name='batch_norm')(attention_output)
+    attention_output = Attention(name="attention")(lstm2)
+    bn = BatchNormalization(name="batch_norm")(attention_output)
 
-    dense1 = Dense(128, activation='relu', kernel_regularizer=regularizers.l2(L2_REG), name='dense_1')(bn)
-    dense1 = Dropout(DROPOUT_RATE + 0.1, name='dropout_3')(dense1)
+    dense1 = Dense(
+        128,
+        activation="relu",
+        kernel_regularizer=regularizers.l2(L2_REG),
+        name="dense_1"
+    )(bn)
 
-    dense2 = Dense(64, activation='relu', kernel_regularizer=regularizers.l2(L2_REG), name='dense_2')(dense1)
-    dense2 = Dropout(DROPOUT_RATE, name='dropout_4')(dense2)
+    dense1 = Dropout(DROPOUT_RATE + 0.1, name="dropout_3")(dense1)
 
-    output = Dense(num_classes, activation='softmax', name='output')(dense2)
+    dense2 = Dense(
+        64,
+        activation="relu",
+        kernel_regularizer=regularizers.l2(L2_REG),
+        name="dense_2"
+    )(dense1)
 
-    model = Model(inputs=[symptom_input, severity_input], outputs=output)
+    dense2 = Dropout(DROPOUT_RATE, name="dropout_4")(dense2)
 
-    # Cosine decay with warmup
-    total_steps = (len(data['X_symptoms_train']) // BATCH_SIZE) * EPOCHS
-    warmup_steps = int(0.1 * total_steps)
-    lr_schedule = CosineWarmup(LEARNING_RATE, warmup_steps, total_steps)
+    output = Dense(
+        num_classes,
+        activation="softmax",
+        name="output"
+    )(dense2)
+
+    model = Model(
+        inputs=[symptom_input, severity_input],
+        outputs=output
+    )
+
+    total_steps = max(1, (len(data["X_symptoms_train"]) // BATCH_SIZE) * EPOCHS)
+    warmup_steps = max(1, int(0.1 * total_steps))
+
+    lr_schedule = CosineWarmup(
+        LEARNING_RATE,
+        warmup_steps,
+        total_steps
+    )
 
     optimizer = AdamW(
         learning_rate=lr_schedule,
@@ -316,14 +436,18 @@ def build_enhanced_bilstm_model(data):
         clipnorm=GRADIENT_CLIP_NORM
     )
 
-    loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=LABEL_SMOOTHING)
+    loss = tf.keras.losses.CategoricalCrossentropy(
+        label_smoothing=LABEL_SMOOTHING
+    )
 
     model.compile(
         optimizer=optimizer,
         loss=loss,
-        metrics=['accuracy']
+        metrics=["accuracy"]
     )
+
     return model
+
 
 # ============================================================================
 # 6. Callbacks Setup
@@ -331,27 +455,31 @@ def build_enhanced_bilstm_model(data):
 
 def setup_callbacks():
     early_stop = EarlyStopping(
-        monitor='val_loss',
+        monitor="val_loss",
         patience=PATIENCE,
         restore_best_weights=True,
         verbose=1
     )
+
     reduce_lr = ReduceLROnPlateau(
-        monitor='val_loss',
+        monitor="val_loss",
         factor=0.5,
         patience=REDUCE_LR_PATIENCE,
         min_lr=MIN_LR,
         verbose=1
     )
+
     checkpoint = ModelCheckpoint(
         BEST_WEIGHTS_PATH,
-        monitor='val_accuracy',
+        monitor="val_accuracy",
         save_best_only=True,
         save_weights_only=True,
-        mode='max',
+        mode="max",
         verbose=1
     )
+
     return [early_stop, reduce_lr, checkpoint]
+
 
 # ============================================================================
 # 7. Helper for one-hot conversion
@@ -360,196 +488,386 @@ def setup_callbacks():
 def to_one_hot(y, num_classes):
     return tf.keras.utils.to_categorical(y, num_classes)
 
+
 # ============================================================================
 # 8. Training Visualization
 # ============================================================================
 
 def plot_training_history(history):
     fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-    axes[0, 0].plot(history.history['loss'], label='Train Loss', linewidth=2)
-    axes[0, 0].plot(history.history['val_loss'], label='Val Loss', linewidth=2)
-    axes[0, 0].set_xlabel('Epochs')
-    axes[0, 0].set_ylabel('Loss')
-    axes[0, 0].set_title('Training and Validation Loss')
+
+    axes[0, 0].plot(history.history["loss"], label="Train Loss", linewidth=2)
+    axes[0, 0].plot(history.history["val_loss"], label="Val Loss", linewidth=2)
+    axes[0, 0].set_xlabel("Epochs")
+    axes[0, 0].set_ylabel("Loss")
+    axes[0, 0].set_title("Training and Validation Loss")
     axes[0, 0].legend()
     axes[0, 0].grid(True, alpha=0.3)
 
-    axes[0, 1].plot(history.history['accuracy'], label='Train Acc', linewidth=2)
-    axes[0, 1].plot(history.history['val_accuracy'], label='Val Acc', linewidth=2)
-    axes[0, 1].set_xlabel('Epochs')
-    axes[0, 1].set_ylabel('Accuracy')
-    axes[0, 1].set_title('Training and Validation Accuracy')
+    axes[0, 1].plot(history.history["accuracy"], label="Train Acc", linewidth=2)
+    axes[0, 1].plot(history.history["val_accuracy"], label="Val Acc", linewidth=2)
+    axes[0, 1].set_xlabel("Epochs")
+    axes[0, 1].set_ylabel("Accuracy")
+    axes[0, 1].set_title("Training and Validation Accuracy")
     axes[0, 1].legend()
     axes[0, 1].grid(True, alpha=0.3)
 
-    if 'lr' in history.history:
-        axes[1, 0].plot(history.history['lr'], label='Learning Rate')
-        axes[1, 0].set_xlabel('Epochs')
-        axes[1, 0].set_ylabel('Learning Rate')
-        axes[1, 0].set_title('Learning Rate over Time')
-        axes[1, 0].set_yscale('log')
+    if "lr" in history.history:
+        axes[1, 0].plot(history.history["lr"], label="Learning Rate")
+        axes[1, 0].set_xlabel("Epochs")
+        axes[1, 0].set_ylabel("Learning Rate")
+        axes[1, 0].set_title("Learning Rate over Time")
+        axes[1, 0].set_yscale("log")
         axes[1, 0].grid(True, alpha=0.3)
 
-    if len(history.history['accuracy']) > 5:
-        train_acc_last = np.array(history.history['accuracy'][-5:])
-        val_acc_last = np.array(history.history['val_accuracy'][-5:])
+    if len(history.history["accuracy"]) > 5:
+        train_acc_last = np.array(history.history["accuracy"][-5:])
+        val_acc_last = np.array(history.history["val_accuracy"][-5:])
         gap = train_acc_last - val_acc_last
+
         axes[1, 1].bar(range(5), gap)
-        axes[1, 1].set_xlabel('Last 5 Epochs')
-        axes[1, 1].set_ylabel('Gap (Train - Val)')
-        axes[1, 1].set_title('Train-Val Gap (Last 5 Epochs)')
-        axes[1, 1].axhline(y=0, color='black', linestyle='--', alpha=0.5)
+        axes[1, 1].set_xlabel("Last 5 Epochs")
+        axes[1, 1].set_ylabel("Gap (Train - Val)")
+        axes[1, 1].set_title("Train-Val Gap (Last 5 Epochs)")
+        axes[1, 1].axhline(y=0, color="black", linestyle="--", alpha=0.5)
         axes[1, 1].grid(True, alpha=0.3)
+
         avg_gap = np.mean(gap)
-        axes[1, 1].text(2, max(gap)/2 if len(gap)>0 else 0, f'Avg Gap: {avg_gap:.4f}',
-                        bbox=dict(boxstyle="round", facecolor="wheat"))
+        axes[1, 1].text(
+            2,
+            max(gap) / 2 if len(gap) > 0 and max(gap) != 0 else 0,
+            f"Avg Gap: {avg_gap:.4f}",
+            bbox=dict(boxstyle="round", facecolor="wheat")
+        )
 
     plt.tight_layout()
-    plt.savefig(os.path.join(REPORTS_DIR, "training_curves.png"), dpi=100, bbox_inches='tight')
+
+    output_path = os.path.join(REPORTS_DIR, "training_curves.png")
+    plt.savefig(output_path, dpi=100, bbox_inches="tight")
     plt.close()
-    print(f"\n📈 Training curves saved to: {os.path.join(REPORTS_DIR, 'training_curves.png')}")
+
+    print(f"\n📈 Training curves saved to: {output_path}")
+
 
 # ============================================================================
 # 9. Evaluation Functions
 # ============================================================================
 
 def evaluate_model(model, data):
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 COMPREHENSIVE MODEL EVALUATION")
-    print("="*70)
+    print("=" * 70)
 
-    X_test_symptoms = data['X_symptoms_test']
-    X_test_severities = data['X_severities_test']
-    y_test = data['y_test']
-    label_encoder = data['label_encoder']
-    num_classes = data['num_classes']
+    X_test_symptoms = data["X_symptoms_test"]
+    X_test_severities = data["X_severities_test"]
+    y_test = data["y_test"]
+    label_encoder = data["label_encoder"]
+    num_classes = data["num_classes"]
+    all_labels = np.arange(num_classes)
 
-    y_pred_probs = model.predict([X_test_symptoms, X_test_severities], verbose=0)
+    y_pred_probs = model.predict(
+        [X_test_symptoms, X_test_severities],
+        verbose=0
+    )
+
     y_pred = np.argmax(y_pred_probs, axis=1)
 
+    classes_present_in_test = len(np.unique(y_test))
+
     test_acc = accuracy_score(y_test, y_pred)
-    precision_macro = precision_score(y_test, y_pred, average='macro', zero_division=0)
-    recall_macro = recall_score(y_test, y_pred, average='macro', zero_division=0)
-    f1_macro = f1_score(y_test, y_pred, average='macro', zero_division=0)
-    precision_weighted = precision_score(y_test, y_pred, average='weighted', zero_division=0)
-    recall_weighted = recall_score(y_test, y_pred, average='weighted', zero_division=0)
-    f1_weighted = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+
+    # Metrics over classes present in y_test/y_pred
+    precision_macro_present = precision_score(
+        y_test,
+        y_pred,
+        average="macro",
+        zero_division=0
+    )
+    recall_macro_present = recall_score(
+        y_test,
+        y_pred,
+        average="macro",
+        zero_division=0
+    )
+    f1_macro_present = f1_score(
+        y_test,
+        y_pred,
+        average="macro",
+        zero_division=0
+    )
+
+    # Metrics over all 41 classes, including absent classes with zero support
+    precision_macro_all = precision_score(
+        y_test,
+        y_pred,
+        labels=all_labels,
+        average="macro",
+        zero_division=0
+    )
+    recall_macro_all = recall_score(
+        y_test,
+        y_pred,
+        labels=all_labels,
+        average="macro",
+        zero_division=0
+    )
+    f1_macro_all = f1_score(
+        y_test,
+        y_pred,
+        labels=all_labels,
+        average="macro",
+        zero_division=0
+    )
+
+    precision_weighted = precision_score(
+        y_test,
+        y_pred,
+        average="weighted",
+        zero_division=0
+    )
+    recall_weighted = recall_score(
+        y_test,
+        y_pred,
+        average="weighted",
+        zero_division=0
+    )
+    f1_weighted = f1_score(
+        y_test,
+        y_pred,
+        average="weighted",
+        zero_division=0
+    )
 
     print("\n1️⃣ BASIC METRICS:")
     print("-" * 40)
-    print(f"   Test Accuracy: {test_acc*100:.4f}%")
-    print(f"   Precision (Macro): {precision_macro:.6f}")
-    print(f"   Recall (Macro): {recall_macro:.6f}")
-    print(f"   F1-Score (Macro): {f1_macro:.6f}")
-    print(f"   Precision (Weighted): {precision_weighted:.6f}")
-    print(f"   Recall (Weighted): {recall_weighted:.6f}")
-    print(f"   F1-Score (Weighted): {f1_weighted:.6f}")
+    print(f"   Test Accuracy: {test_acc * 100:.4f}%")
+    print(f"   Classes present in test: {classes_present_in_test}/{num_classes}")
+    print(f"   Precision Macro - Present Test Classes: {precision_macro_present:.6f}")
+    print(f"   Recall Macro - Present Test Classes: {recall_macro_present:.6f}")
+    print(f"   F1 Macro - Present Test Classes: {f1_macro_present:.6f}")
+    print(f"   Precision Weighted: {precision_weighted:.6f}")
+    print(f"   Recall Weighted: {recall_weighted:.6f}")
+    print(f"   F1 Weighted: {f1_weighted:.6f}")
 
-    top2_acc = top_k_accuracy_score(y_test, y_pred_probs, k=2, labels=range(num_classes))
-    top3_acc = top_k_accuracy_score(y_test, y_pred_probs, k=3, labels=range(num_classes))
-    top5_acc = top_k_accuracy_score(y_test, y_pred_probs, k=5, labels=range(num_classes))
+    print("\n   All-Class Macro Metrics:")
+    print("   These include classes absent from the test set with zero support.")
+    print(f"   Precision Macro - All Classes: {precision_macro_all:.6f}")
+    print(f"   Recall Macro - All Classes: {recall_macro_all:.6f}")
+    print(f"   F1 Macro - All Classes: {f1_macro_all:.6f}")
+
+    top2_acc = top_k_accuracy_score(
+        y_test,
+        y_pred_probs,
+        k=2,
+        labels=all_labels
+    )
+    top3_acc = top_k_accuracy_score(
+        y_test,
+        y_pred_probs,
+        k=3,
+        labels=all_labels
+    )
+    top5_acc = top_k_accuracy_score(
+        y_test,
+        y_pred_probs,
+        k=5,
+        labels=all_labels
+    )
 
     print("\n2️⃣ TOP-K ACCURACY:")
     print("-" * 40)
-    print(f"   Top-2 Accuracy: {top2_acc*100:.4f}%")
-    print(f"   Top-3 Accuracy: {top3_acc*100:.4f}%")
-    print(f"   Top-5 Accuracy: {top5_acc*100:.4f}%")
+    print(f"   Top-2 Accuracy: {top2_acc * 100:.4f}%")
+    print(f"   Top-3 Accuracy: {top3_acc * 100:.4f}%")
+    print(f"   Top-5 Accuracy: {top5_acc * 100:.4f}%")
 
     print("\n3️⃣ CLASSIFICATION REPORT:")
     print("-" * 70)
-    report_dict = classification_report(y_test, y_pred, target_names=label_encoder.classes_, output_dict=True, zero_division=0)
+
+    report_dict = classification_report(
+        y_test,
+        y_pred,
+        labels=all_labels,
+        target_names=label_encoder.classes_,
+        output_dict=True,
+        zero_division=0
+    )
+
     report_df = pd.DataFrame(report_dict).transpose()
-    print(report_df.round(6).head(20))
-    print(f"\n   ... and {len(label_encoder.classes_) - 20} more classes")
-    report_df.to_csv(os.path.join(REPORTS_DIR, "classification_report.csv"))
+    print(report_df.round(6).head(45))
 
-    cm = confusion_matrix(y_test, y_pred)
-    class_freq = np.sum(cm, axis=1)
-    sorted_idx = np.argsort(class_freq)[::-1]
-    cm_sorted = cm[sorted_idx][:, sorted_idx]
-    labels_sorted = label_encoder.classes_[sorted_idx]
+    report_path = os.path.join(REPORTS_DIR, "classification_report.csv")
+    report_df.to_csv(report_path)
+    print(f"\n✅ Classification report saved to: {report_path}")
 
-    plt.figure(figsize=(24, 20))
-    cm_percent = cm_sorted.astype('float') / cm_sorted.sum(axis=1)[:, np.newaxis] * 100
-    annot = np.empty_like(cm_sorted, dtype=object)
-    for i in range(cm_sorted.shape[0]):
-        for j in range(cm_sorted.shape[1]):
-            annot[i, j] = f"{cm_sorted[i,j]}\n({cm_percent[i,j]:.1f}%)"
+    cm = confusion_matrix(
+        y_test,
+        y_pred,
+        labels=all_labels
+    )
 
-    sns.heatmap(cm_sorted, annot=annot, fmt='', cmap='Blues',
-                xticklabels=labels_sorted, yticklabels=labels_sorted,
-                annot_kws={'size': 7}, cbar_kws={'label': 'Count'})
+    correct_predictions = int(np.trace(cm))
+    wrong_predictions = int(np.sum(cm) - np.trace(cm))
+
+    print("\n4️⃣ PREDICTION COUNTS:")
+    print("-" * 40)
+    print(f"   Correct Predictions: {correct_predictions}")
+    print(f"   Wrong Predictions: {wrong_predictions}")
+    print(f"   Total Test Samples: {len(y_test)}")
+
+    # Save full confusion matrix as CSV
+    cm_df = pd.DataFrame(
+        cm,
+        index=label_encoder.classes_,
+        columns=label_encoder.classes_
+    )
+
+    cm_csv_path = os.path.join(REPORTS_DIR, "confusion_matrix_full.csv")
+    cm_df.to_csv(cm_csv_path)
+    print(f"\n✅ Full confusion matrix CSV saved to: {cm_csv_path}")
+
+    # Plot confusion matrix for present test classes only
+    present_labels = np.unique(y_test)
+    present_label_names = label_encoder.classes_[present_labels]
+
+    cm_present = confusion_matrix(
+        y_test,
+        y_pred,
+        labels=present_labels
+    )
+
+    plt.figure(figsize=(20, 16))
+    sns.heatmap(
+        cm_present,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=present_label_names,
+        yticklabels=present_label_names,
+        annot_kws={"size": 7},
+        cbar_kws={"label": "Count"}
+    )
+
     plt.xticks(rotation=90, fontsize=8)
     plt.yticks(rotation=0, fontsize=8)
-    plt.title('Confusion Matrix (Sorted by Class Frequency)', fontsize=16)
+    plt.title("Confusion Matrix - Present Test Classes Only", fontsize=16)
     plt.tight_layout()
-    plt.savefig(os.path.join(REPORTS_DIR, "confusion_matrix_sorted.png"), dpi=200, bbox_inches='tight')
+
+    cm_png_path = os.path.join(REPORTS_DIR, "confusion_matrix_sorted.png")
+    plt.savefig(cm_png_path, dpi=200, bbox_inches="tight")
     plt.close()
-    print(f"\n✅ Sorted confusion matrix saved to: {os.path.join(REPORTS_DIR, 'confusion_matrix_sorted.png')}")
+
+    print(f"✅ Confusion matrix image saved to: {cm_png_path}")
 
     misclassified = np.where(y_test != y_pred)[0]
     error_pairs = [(y_test[i], y_pred[i]) for i in misclassified]
     common_errors = Counter(error_pairs).most_common(15)
-    print("\n4️⃣ MOST COMMON MISCLASSIFICATIONS:")
-    print("-" * 50)
-    for (true, pred), count in common_errors:
-        print(f"   {label_encoder.classes_[true]:30s} -> {label_encoder.classes_[pred]:30s} : {count} times")
 
-    per_class = []
-    for i, cls in enumerate(label_encoder.classes_):
-        tp = cm[i, i]
-        fp = cm[:, i].sum() - tp
-        fn = cm[i, :].sum() - tp
-        prec = tp / (tp + fp) if (tp+fp) > 0 else 0
-        rec = tp / (tp + fn) if (tp+fn) > 0 else 0
-        per_class.append((cls, prec, rec))
-    per_class.sort(key=lambda x: x[1])
-    print("\n5️⃣ WORST PERFORMING CLASSES (by precision):")
+    print("\n5️⃣ MOST COMMON MISCLASSIFICATIONS:")
     print("-" * 50)
-    for cls, prec, rec in per_class[:10]:
-        print(f"   {cls:30s} precision={prec:.3f}, recall={rec:.3f}")
+
+    if not common_errors:
+        print("   ✅ No misclassifications found.")
+    else:
+        for (true, pred), count in common_errors:
+            print(
+                f"   {label_encoder.classes_[true]:30s} -> "
+                f"{label_encoder.classes_[pred]:30s} : {count} times"
+            )
+
+    # Worst performing classes by precision from the report
+    per_class = []
+
+    for i, cls in enumerate(label_encoder.classes_):
+        row = report_df.loc[cls]
+        precision_value = float(row["precision"])
+        recall_value = float(row["recall"])
+        support_value = float(row["support"])
+
+        per_class.append(
+            (cls, precision_value, recall_value, support_value)
+        )
+
+    per_class.sort(key=lambda x: x[1])
+
+    print("\n6️⃣ WORST PERFORMING CLASSES (by precision):")
+    print("-" * 60)
+
+    for cls, precision_value, recall_value, support_value in per_class[:10]:
+        print(
+            f"   {cls:30s} "
+            f"precision={precision_value:.3f}, "
+            f"recall={recall_value:.3f}, "
+            f"support={support_value:.0f}"
+        )
 
     return {
-        'test_accuracy': float(test_acc),
-        'precision_macro': float(precision_macro),
-        'recall_macro': float(recall_macro),
-        'f1_macro': float(f1_macro),
-        'precision_weighted': float(precision_weighted),
-        'recall_weighted': float(recall_weighted),
-        'f1_weighted': float(f1_weighted),
-        'top2_accuracy': float(top2_acc),
-        'top3_accuracy': float(top3_acc),
-        'top5_accuracy': float(top5_acc),
-        'correct_predictions': int(np.trace(cm)),
-        'wrong_predictions': int(np.sum(cm) - np.trace(cm))
+        "test_accuracy": float(test_acc),
+
+        "precision_macro_present_classes": float(precision_macro_present),
+        "recall_macro_present_classes": float(recall_macro_present),
+        "f1_macro_present_classes": float(f1_macro_present),
+
+        "precision_macro_all_classes": float(precision_macro_all),
+        "recall_macro_all_classes": float(recall_macro_all),
+        "f1_macro_all_classes": float(f1_macro_all),
+
+        "precision_weighted": float(precision_weighted),
+        "recall_weighted": float(recall_weighted),
+        "f1_weighted": float(f1_weighted),
+
+        "top2_accuracy": float(top2_acc),
+        "top3_accuracy": float(top3_acc),
+        "top5_accuracy": float(top5_acc),
+
+        "correct_predictions": correct_predictions,
+        "wrong_predictions": wrong_predictions,
+        "classes_present_in_test": int(classes_present_in_test),
+        "total_classes": int(num_classes)
     }
+
 
 # ============================================================================
 # 10. Main Training Pipeline
 # ============================================================================
 
 def main():
-    print("="*70)
+    print("=" * 70)
     print("🚀 ENHANCED BiLSTM TRAINING (Attention + Residual + Cosine Decay + Gate)")
-    print("="*70)
+    print("=" * 70)
 
     data = load_data()
 
+    train_samples_before_aug = len(data["X_symptoms_train"])
+
     # Data augmentation
     X_symptoms_train, X_severities_train, y_train = data_augmentation(
-        data['X_symptoms_train'],
-        data['X_severities_train'],
-        data['y_train'],
+        data["X_symptoms_train"],
+        data["X_severities_train"],
+        data["y_train"],
         aug_factor=AUGMENTATION_FACTOR
     )
-    data['X_symptoms_train'] = X_symptoms_train
-    data['X_severities_train'] = X_severities_train
-    data['y_train'] = y_train
+
+    data["X_symptoms_train"] = X_symptoms_train
+    data["X_severities_train"] = X_severities_train
+    data["y_train"] = y_train
+
+    train_samples_after_aug = len(data["X_symptoms_train"])
 
     # Class weights
     print("\n⚖️ Computing class weights...")
-    class_weights = compute_class_weight('balanced', classes=np.unique(data['y_train']), y=data['y_train'])
-    class_weight_dict = dict(enumerate(class_weights))
+
+    unique_train_classes = np.unique(data["y_train"])
+
+    class_weights = compute_class_weight(
+        class_weight="balanced",
+        classes=unique_train_classes,
+        y=data["y_train"]
+    )
+
+    class_weight_dict = {
+        int(cls): float(weight)
+        for cls, weight in zip(unique_train_classes, class_weights)
+    }
 
     # Build model
     print("\n🏗️ Building enhanced BiLSTM model...")
@@ -564,13 +882,16 @@ def main():
     print(f"   - Label smoothing: {LABEL_SMOOTHING}")
     print(f"   - Gradient clipping: {GRADIENT_CLIP_NORM}")
 
-    # Convert labels to one-hot
-    y_train_one_hot = to_one_hot(data['y_train'], data['num_classes'])
-    y_val_one_hot = to_one_hot(data['y_val'], data['num_classes'])
+    y_train_one_hot = to_one_hot(data["y_train"], data["num_classes"])
+    y_val_one_hot = to_one_hot(data["y_val"], data["num_classes"])
 
     history = model.fit(
-        [data['X_symptoms_train'], data['X_severities_train']], y_train_one_hot,
-        validation_data=([data['X_symptoms_val'], data['X_severities_val']], y_val_one_hot),
+        [data["X_symptoms_train"], data["X_severities_train"]],
+        y_train_one_hot,
+        validation_data=(
+            [data["X_symptoms_val"], data["X_severities_val"]],
+            y_val_one_hot
+        ),
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         class_weight=class_weight_dict,
@@ -580,15 +901,17 @@ def main():
 
     # Load best weights
     print("\n📦 Loading best checkpoint weights...")
+
     if os.path.exists(BEST_WEIGHTS_PATH):
         model.load_weights(BEST_WEIGHTS_PATH)
         print(f"✅ Best weights loaded from: {BEST_WEIGHTS_PATH}")
     else:
-        print(f"⚠️ Best weights file not found, using current model.")
+        print("⚠️ Best weights file not found, using current model.")
 
-    # Save models
+    # Save models before evaluation
     model.save(BEST_MODEL_PATH)
     model.save(FINAL_MODEL_PATH)
+
     print(f"✅ Best model saved to: {BEST_MODEL_PATH}")
     print(f"✅ Final model saved to: {FINAL_MODEL_PATH}")
 
@@ -599,31 +922,35 @@ def main():
     metrics = evaluate_model(model, data)
 
     # Summary
-    train_acc = history.history['accuracy'][-1]
-    val_acc = history.history['val_accuracy'][-1]
+    train_acc = history.history["accuracy"][-1]
+    val_acc = history.history["val_accuracy"][-1]
     gap = train_acc - val_acc
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📈 TRAINING SUMMARY")
-    print("="*70)
-    print(f"\n   Train Accuracy: {train_acc*100:.4f}%")
-    print(f"   Validation Accuracy: {val_acc*100:.4f}%")
-    print(f"   Test Accuracy: {metrics['test_accuracy']*100:.4f}%")
-    print(f"   Train-Val Gap: {gap*100:.4f}%")
+    print("=" * 70)
+
+    print(f"\n   Train Accuracy: {train_acc * 100:.4f}%")
+    print(f"   Validation Accuracy: {val_acc * 100:.4f}%")
+    print(f"   Test Accuracy: {metrics['test_accuracy'] * 100:.4f}%")
+    print(f"   Train-Val Gap: {gap * 100:.4f}%")
+
     if abs(gap) < 0.03:
-        print("   ✅ Excellent generalization (small gap)")
+        print("   ✅ Excellent validation behavior (small train-val gap)")
     elif gap > 0.1:
-        print("   ⚠️ Possible overfitting detected")
+        print("   ⚠️ Possible overfitting against validation set")
     elif gap < -0.1:
         print("   ⚠️ Validation set might be easier than training")
 
-    print(f"\n   F1-Score (Macro): {metrics['f1_macro']*100:.4f}%")
-    print(f"   F1-Score (Weighted): {metrics['f1_weighted']*100:.4f}%")
-    print(f"   Top-3 Accuracy: {metrics['top3_accuracy']*100:.4f}%")
+    print(f"\n   F1 Macro Present Test Classes: {metrics['f1_macro_present_classes'] * 100:.4f}%")
+    print(f"   F1 Macro All Classes: {metrics['f1_macro_all_classes'] * 100:.4f}%")
+    print(f"   F1 Weighted: {metrics['f1_weighted'] * 100:.4f}%")
+    print(f"   Top-3 Accuracy: {metrics['top3_accuracy'] * 100:.4f}%")
 
     # Save full report
     report = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+
         "model_config": {
             "embedding_dim": EMBEDDING_DIM,
             "lstm_units_1": LSTM_UNITS_1,
@@ -640,33 +967,41 @@ def main():
             "label_smoothing": LABEL_SMOOTHING,
             "gradient_clip_norm": GRADIENT_CLIP_NORM
         },
+
         "data_info": {
-            "train_samples_before_aug": len(data['X_symptoms_train']) // 2,
-            "train_samples_after_aug": len(data['X_symptoms_train']),
-            "val_samples": len(data['X_symptoms_val']),
-            "test_samples": len(data['X_symptoms_test']),
-            "vocab_size": data['vocab_size'],
-            "severity_vocab_size": data['severity_vocab_size'],
-            "num_classes": data['num_classes'],
-            "max_sequence_length": data['max_len']
+            "train_samples_before_aug": int(train_samples_before_aug),
+            "train_samples_after_aug": int(train_samples_after_aug),
+            "val_samples": int(len(data["X_symptoms_val"])),
+            "test_samples": int(len(data["X_symptoms_test"])),
+            "vocab_size": int(data["vocab_size"]),
+            "severity_vocab_size": int(data["severity_vocab_size"]),
+            "num_classes": int(data["num_classes"]),
+            "classes_present_in_test": int(metrics["classes_present_in_test"]),
+            "max_sequence_length": int(data["max_len"])
         },
+
         "training_results": {
             "train_accuracy": float(train_acc),
             "val_accuracy": float(val_acc),
-            "test_accuracy": metrics['test_accuracy'],
+            "test_accuracy": metrics["test_accuracy"],
             "train_val_gap": float(gap),
-            "epochs_completed": len(history.history['accuracy'])
+            "epochs_completed": int(len(history.history["accuracy"]))
         },
+
         "test_metrics": metrics
     }
 
-    with open(os.path.join(REPORTS_DIR, "training_complete_report.json"), 'w') as f:
-        json.dump(report, f, indent=2)
+    report_path = os.path.join(REPORTS_DIR, "training_complete_report.json")
 
-    print(f"\n📁 Complete report saved to: {os.path.join(REPORTS_DIR, 'training_complete_report.json')}")
-    print("\n" + "="*70)
+    with open(report_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+
+    print(f"\n📁 Complete report saved to: {report_path}")
+
+    print("\n" + "=" * 70)
     print("✅ ENHANCED TRAINING COMPLETED SUCCESSFULLY!")
-    print("="*70)
+    print("=" * 70)
+
 
 if __name__ == "__main__":
     main()

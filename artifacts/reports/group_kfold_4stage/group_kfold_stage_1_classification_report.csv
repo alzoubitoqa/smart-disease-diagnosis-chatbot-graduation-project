@@ -1,0 +1,45 @@
+,precision,recall,f1-score,support
+(vertigo)_paroymsal_positional_vertigo,1.0,1.0,1.0,6.0
+acne,1.0,1.0,1.0,12.0
+aids,1.0,1.0,1.0,12.0
+alcoholic_hepatitis,1.0,1.0,1.0,18.0
+allergy,1.0,1.0,1.0,24.0
+arthritis,1.0,1.0,1.0,6.0
+bronchial_asthma,1.0,1.0,1.0,90.0
+cervical_spondylosis,1.0,1.0,1.0,84.0
+chicken_pox,1.0,1.0,1.0,6.0
+chronic_cholestasis,1.0,0.6875,0.8148148148148148,96.0
+common_cold,1.0,1.0,1.0,84.0
+dengue,1.0,1.0,1.0,84.0
+diabetes,1.0,1.0,1.0,84.0
+dimorphic_hemmorhoids(piles),1.0,1.0,1.0,96.0
+drug_reaction,1.0,1.0,1.0,24.0
+fungal_infection,0.0,0.0,0.0,0.0
+gastroenteritis,1.0,1.0,1.0,12.0
+gerd,0.0,0.0,0.0,0.0
+heart_attack,1.0,1.0,1.0,12.0
+hepatitis_a,1.0,1.0,1.0,96.0
+hepatitis_b,1.0,1.0,1.0,12.0
+hepatitis_c,0.17142857142857143,1.0,0.2926829268292683,6.0
+hepatitis_d,0.96,1.0,0.9795918367346939,24.0
+hepatitis_e,1.0,1.0,1.0,6.0
+hypertension,1.0,1.0,1.0,30.0
+hyperthyroidism,0.0,0.0,0.0,0.0
+hypoglycemia,1.0,1.0,1.0,24.0
+hypothyroidism,1.0,1.0,1.0,72.0
+impetigo,1.0,1.0,1.0,90.0
+jaundice,0.0,0.0,0.0,0.0
+malaria,1.0,1.0,1.0,18.0
+migraine,1.0,1.0,1.0,12.0
+osteoarthristis,1.0,1.0,1.0,6.0
+paralysis_(brain_hemorrhage),1.0,1.0,1.0,12.0
+peptic_ulcer_diseae,1.0,1.0,1.0,6.0
+pneumonia,1.0,1.0,1.0,18.0
+psoriasis,1.0,1.0,1.0,12.0
+tuberculosis,1.0,1.0,1.0,6.0
+typhoid,1.0,1.0,1.0,12.0
+urinary_tract_infection,1.0,1.0,1.0,6.0
+varicose_veins,1.0,1.0,1.0,12.0
+micro avg,0.975609756097561,0.975609756097561,0.975609756097561,1230.0
+macro avg,0.8812543554006969,0.8948170731707317,0.8801729165458239,1230.0
+weighted avg,0.995177700348432,0.975609756097561,0.9816979868819758,1230.0

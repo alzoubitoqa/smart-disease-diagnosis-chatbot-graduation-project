@@ -1,0 +1,5 @@
+stage,train_samples,validation_samples,test_samples,train_samples_after_augmentation,train_groups,validation_groups,test_groups,train_validation_group_overlap,train_test_group_overlap,validation_test_group_overlap,test_classes_present,total_classes,epochs_completed,best_validation_accuracy,final_validation_accuracy,test_accuracy,precision_macro,recall_macro,f1_macro,precision_weighted,recall_weighted,f1_weighted,top2_accuracy,top3_accuracy,top5_accuracy,correct_predictions,wrong_predictions
+1,3023,667,1230,4534,193,35,77,0,0,0,37,41,195,1.0,1.0,0.975609756097561,0.9765250965250966,0.9915540540540541,0.9753267453615887,0.995177700348432,0.975609756097561,0.9816979868819758,0.9991869918699187,1.0,1.0,1200,30
+2,3036,654,1230,4554,197,35,73,0,0,0,35,41,170,1.0,1.0,0.9861788617886179,0.9945425361155698,0.9730158730158731,0.9714192313080839,0.9888188544806795,0.9861788617886179,0.9807254084309394,1.0,1.0,1.0,1213,17
+3,3181,509,1230,4771,193,35,77,0,0,0,38,41,106,1.0,0.9882121682167053,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1230,0
+4,3126,564,1230,4689,192,35,78,0,0,0,40,41,147,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1230,0

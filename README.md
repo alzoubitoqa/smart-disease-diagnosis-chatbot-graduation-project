@@ -1,5 +1,17 @@
 # A Smart Chatbot System for Diagnosing Diseases
 
+**Author:** Toqa Mahmoud Tawfiq Al-Zoubi
+
+**Supervisor:** Prof. Abdelwadood Mesleh
+
+**Program:** Artificial Intelligence and Robotics
+
+**Version:** v1.0 Final Release
+
+**Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi**
+
+---
+
 An AI-powered medical diagnosis support system designed to predict possible diseases based on user-reported symptoms and symptom severity levels using deep learning techniques.
 
 The system combines a BiLSTM-based prediction model, symptom severity analysis, disease knowledge-base integration, user session history, and a chatbot interface to provide intelligent healthcare support.

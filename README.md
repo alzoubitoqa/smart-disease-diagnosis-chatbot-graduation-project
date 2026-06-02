@@ -382,3 +382,11 @@ All source-code implementation, system integration, architecture development, ma
 Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi
 
 All Rights Reserved.
+
+Unauthorized copying, redistribution, modification, publication, reproduction, or use of this project, in whole or in part, without prior written permission from the author is prohibited.
+
+This repository is maintained as the official implementation archive of the graduation project:
+
+"A Smart Chatbot System for Diagnosing Diseases"
+
+Version: v1.0 Final Release

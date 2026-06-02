@@ -1,229 +1,372 @@
-# Smart Disease Diagnosis Chatbot
+# A Smart Chatbot System for Diagnosing Diseases
 
-A full-stack AI-powered medical diagnosis assistant built with **FastAPI**, **React + Vite**, **TensorFlow/Keras**, and **SQLite**.
+An AI-powered medical diagnosis support system designed to predict possible diseases based on user-reported symptoms and symptom severity levels using deep learning techniques.
 
-The system predicts possible diseases based on user symptoms and severity levels using a **BiLSTM-based deep learning model**. It also supports **history-aware prediction**, disease descriptions, precaution recommendations, and optional AI-generated explanations using Groq.
-
-> This project is developed for educational and research purposes as part of a graduation project in Artificial Intelligence and Robotics.
+The system combines a BiLSTM-based prediction model, symptom severity analysis, disease knowledge-base integration, user session history, and a chatbot interface to provide intelligent healthcare support.
 
 ---
 
-## Overview
+# Project Information
 
-Smart Disease Diagnosis Chatbot is an intelligent medical support system that allows users to enter symptoms with severity levels and receive a structured prediction response.
+**Project Title:**
+A Smart Chatbot System for Diagnosing Diseases
 
-The system provides:
+**Field:**
+Artificial Intelligence in Healthcare
+
+**Academic Program:**
+Artificial Intelligence and Robotics
+
+**Supervisor:**
+Prof. Abdelwadood Mesleh
+
+---
+
+# Author
+
+## System Design and Implementation
+
+**Toqa Mahmoud Tawfiq Al-Zoubi**
+
+The implementation presented in this repository includes:
+
+- System architecture design
+- Backend development
+- Frontend development
+- Database integration
+- Deep learning model implementation
+- Data preprocessing pipeline
+- Disease prediction engine
+- Knowledge-base integration
+- User authentication system
+- Session-history management
+- API development and testing
+- Deployment preparation
+- Technical documentation
+
+---
+
+# Project Overview
+
+The Smart Disease Diagnosis Chatbot is an intelligent healthcare support system that assists users in identifying possible diseases based on their symptoms and severity levels.
+
+The system utilizes a Bidirectional Long Short-Term Memory (BiLSTM) neural network trained on disease-symptom datasets to predict potential medical conditions.
+
+The chatbot provides:
 
 - Predicted disease
 - Confidence score
-- Top possible conditions
+- Ranked disease candidates
 - Disease description
-- Suggested precautions
-- Severity summary
-- Current-session prediction
+- Recommended precautions
+- Symptom severity analysis
+- Session-aware support
 - History-aware prediction
-- Optional AI-generated explanation
+- Safety-oriented medical guidance
 
-This system does **not replace doctors or professional medical diagnosis**. It is intended only as a supportive educational tool.
+This system is intended as a decision-support tool and does not replace professional medical diagnosis.
 
 ---
 
-## Main Features
+# Main Features
 
-- Symptom-based disease prediction
-- Severity-aware diagnosis
-- History-aware inference using previous sessions
+### User Features
+
+- User registration and login
+- Secure authentication
+- User profile management
+- Symptom selection interface
+- Symptom severity selection
+- Disease prediction
+- Disease explanation
+- Precaution recommendations
+- Prediction history tracking
+
+### AI Features
+
+- BiLSTM-based disease prediction
+- Symptom-severity encoding
+- Confidence-based classification
+- Ranked prediction generation
+- History-aware inference
+- Emergency symptom detection
+- Low-confidence warning system
+
+### System Features
+
 - FastAPI backend
-- React + Vite frontend
-- SQLite database for users, sessions, and prediction history
-- BiLSTM deep learning model
-- Disease description and precaution knowledge base
-- Emergency-aware logic for critical symptom patterns
-- Optional Groq AI explanation layer
+- React frontend
+- SQLite database
+- REST API architecture
+- Knowledge-base integration
+- Modular software architecture
 - Swagger API documentation
 
 ---
 
-## Tech Stack
+# Technology Stack
 
-### Backend
+## Backend
 
 - Python 3.10
 - FastAPI
 - Uvicorn
-- TensorFlow / Keras
+- TensorFlow
+- Keras
 - SQLite
 - Pydantic
-- python-dotenv
-- Groq API optional integration
+- JWT Authentication
+- Bcrypt
+- Python-dotenv
 
-### Frontend
+## Frontend
 
 - React
 - Vite
 - Axios
 - React Router DOM
 
-### Machine Learning
+## Artificial Intelligence
 
-- BiLSTM model
-- Symptom encoding
-- Severity encoding
-- History-aware inference
-- Confidence-based prediction logic
+- Deep Learning
+- Bidirectional LSTM (BiLSTM)
+- Symptom Encoding
+- Severity Encoding
+- Sequence Classification
+- Confidence Scoring
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
-Backend/
-├── data/
+Backend
+│
+├── .venv/
 ├── artifacts/
-│   ├── db/
-│   ├── figures/
-│   └── models/
+├── data/
+├── DiagnoSeq/
 │
 ├── docs/
 │   ├── core_workflow.txt
-│   ├── project_steps.docx
-│   └── other documentation files
+│   ├── delet_command.txt
+│   ├── final result.docx
+│   ├── initial_plan.docx
+│   └── project_steps.docx
 │
 ├── Frontend/
-│   └── disease-chatbot-frontend/
-│       ├── public/
-│       ├── src/
-│       ├── package.json
-│       ├── vite.config.js
-│       └── README.md
 │
 ├── src/
 │   ├── api/
+│   ├── artifacts/
+│   ├── chatbot/
+│   ├── core/
+│   ├── knowledge_base/
 │   ├── ml/
+│   ├── models/
 │   ├── preprocessing/
-│   ├── database/
-│   └── services/
+│   ├── repositories/
+│   ├── schemas/
+│   ├── services/
+│   ├── visualization/
+│   └── __init__.py
 │
 ├── tests/
+│
 ├── .env
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
 └── run.py
-How the System Works
-The user enters symptoms and severity levels from the frontend.
-The React frontend sends the request to the FastAPI backend.
-The backend preprocesses the symptoms and severity values.
-The trained BiLSTM model predicts the most likely disease.
-The system calculates the confidence score and top predictions.
-The knowledge base returns disease descriptions and precautions.
-If previous sessions exist, the system can perform history-aware prediction.
-The final structured response is displayed to the user.
-Installation and Setup
-1. Clone the repository
-git clone https://github.com/alzoubitoqa/smart-disease-diagnosis-chatbot.git
-cd smart-disease-diagnosis-chatbot
-Backend Setup
-2. Create and activate virtual environment
-Windows PowerShell
-py -3.10 -m venv .venv
-.venv\Scripts\Activate.ps1
-3. Install backend dependencies
-python -m pip install --upgrade pip setuptools wheel
+```
+
+---
+
+# System Workflow
+
+### Step 1
+
+The user enters symptoms through the chatbot interface.
+
+### Step 2
+
+The user assigns severity levels to each selected symptom.
+
+### Step 3
+
+The frontend sends the data to the FastAPI backend.
+
+### Step 4
+
+The preprocessing module transforms symptoms and severity values into encoded sequences.
+
+### Step 5
+
+The BiLSTM model processes the encoded symptom sequence.
+
+### Step 6
+
+The prediction engine generates disease probabilities.
+
+### Step 7
+
+The system calculates:
+
+- Predicted disease
+- Confidence score
+- Alternative predictions
+
+### Step 8
+
+The knowledge base retrieves:
+
+- Disease description
+- Recommended precautions
+
+### Step 9
+
+The chatbot presents the final response to the user.
+
+---
+
+# Core Components
+
+## Authentication Module
+
+Responsible for:
+
+- Registration
+- Login
+- Password hashing
+- JWT token generation
+
+---
+
+## Profile Module
+
+Responsible for:
+
+- User information
+- Medical profile data
+- Session ownership
+
+---
+
+## Prediction Module
+
+Responsible for:
+
+- Symptom processing
+- Severity processing
+- Disease prediction
+- Confidence calculation
+
+---
+
+## History Module
+
+Responsible for:
+
+- Session storage
+- Previous predictions
+- History-aware prediction support
+
+---
+
+## Knowledge Base
+
+Responsible for:
+
+- Disease descriptions
+- Disease precautions
+- Safety-oriented guidance
+
+---
+
+# Dataset
+
+The model was trained using disease-symptom datasets containing:
+
+- Disease names
+- Symptom combinations
+- Symptom severity information
+- Disease descriptions
+- Precaution recommendations
+
+The final system supports prediction across multiple disease categories represented within the training dataset.
+
+---
+
+# Model Architecture
+
+The prediction engine is based on an enhanced BiLSTM architecture that processes:
+
+- Symptom sequences
+- Severity sequences
+
+Model capabilities include:
+
+- Long-term dependency learning
+- Bidirectional context understanding
+- Confidence-based prediction
+- Medical sequence classification
+
+---
+
+# Running the Project
+
+## Install Dependencies
+
+```bash
 pip install -r requirements.txt
-4. Run the backend
-python -m uvicorn src.api.main:app --reload
+```
 
-Backend URL:
+## Start Backend
 
-http://127.0.0.1:8000
+```bash
+python run.py
+```
 
-Swagger API documentation:
+or
 
-http://127.0.0.1:8000/docs
-Frontend Setup
-5. Move to the frontend folder
-cd Frontend/disease-chatbot-frontend
-6. Install frontend dependencies
-npm install
-7. Run the frontend
-npm run dev
+```bash
+uvicorn src.api.main:app --reload
+```
 
-Frontend URL:
+---
 
-http://localhost:5173/
-Environment Variables
+# API Documentation
 
-Create a .env file in the backend root folder:
+After running the backend:
 
-GROQ_API_KEY=your_groq_api_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
+```text
+http://localhost:8000/docs
+```
 
-Important:
+Swagger documentation provides full access to all available API endpoints.
 
-Do not upload .env to GitHub.
-If GROQ_API_KEY is empty, the backend can still run without AI explanation generation.
-Dataset Files
+---
 
-Place the required CSV files inside:
+# Important Notice
 
-data/raw/
+This project is intended for:
 
-Required files:
+- Educational purposes
+- Research purposes
+- Artificial Intelligence experimentation
 
-dataset.csv
-symptom_Description.csv
-symptom_precaution.csv
-Symptom-severity.csv
-Running Tests
+The generated predictions should not be considered medical diagnoses and must not replace professional healthcare consultation.
 
-From the backend root folder:
+---
 
-python tests/test_health.py
-python tests/test_prediction.py
-python tests/test_history.py
-python tests/test_model_load.py
-python tests/test_api.py
-Prediction Modes
-Current Session Prediction
+# Copyright
 
-Uses only the symptoms entered in the current session.
+© 2026 Toqa Mahmoud Tawfiq Al-Zoubi
 
-History-Aware Prediction
+All source-code implementation, system integration, architecture development, machine-learning pipeline implementation, backend services, frontend integration, and technical documentation contained in this repository are attributed to the author listed above.
 
-Uses the current symptoms together with selected symptoms from previous sessions to support more context-aware prediction.
+## License
 
-Example Backend Endpoints
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/profile/{user_id}
-GET  /api/symptoms
-POST /api/predict
-POST /api/predict/history-aware
-GET  /api/history/{user_id}
-Important Notes
-Run backend commands from the root Backend folder.
-Run frontend commands from Frontend/disease-chatbot-frontend.
-The SQLite database is stored inside artifacts/db/.
-Trained models are stored inside artifacts/models/.
-Do not upload .env, .venv, or node_modules.
-If the model files are too large for GitHub, use Git LFS or upload only the source code and documentation.
-Disclaimer
+Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi
 
-This system is intended for educational and research purposes only.
-
-It provides supportive predictions based on symptom patterns, severity values, and stored history. It does not replace medical professionals, clinical diagnosis, or emergency care.
-
-Author
-
-Developed by Toqa Al-Zoubi as part of a graduation project in Artificial Intelligence and Robotics.
-
-Focus areas:
-
-* medical diagnosis assistance
-* deep learning with BiLSTM
-* history-aware inference
-* backend API development
-* React frontend integration
-* applied AI in healthcare support systems
-
+All Rights Reserved.

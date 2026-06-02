@@ -1,0 +1,21 @@
+{
+  "model_path": "C:\\Users\\User\\OneDrive\\Desktop\\Backend\\artifacts\\models\\bilstm_best.keras",
+  "validation_accuracy": 1.0,
+  "test_accuracy": 1.0,
+  "validation_avg_top_confidence": 0.865121066570282,
+  "test_avg_top_confidence": 0.7783837914466858,
+  "validation_min_top_confidence": 0.2088468223810196,
+  "test_min_top_confidence": 0.22627119719982147,
+  "validation_max_top_confidence": 0.9886842370033264,
+  "test_max_top_confidence": 0.9801923632621765,
+  "predictions_sum_to_1_validation": true,
+  "predictions_sum_to_1_test": true,
+  "val_loss_cce_no_smoothing": 0.16886724531650543,
+  "test_loss_cce_no_smoothing": 0.31118708848953247,
+  "val_loss_cce_label_smoothing_0_1": 0.8705451488494873,
+  "test_loss_cce_label_smoothing_0_1": 0.9124022126197815,
+  "val_loss_from_logits_no_smoothing": 2.8852925300598145,
+  "test_loss_from_logits_no_smoothing": 2.969952344894409,
+  "val_loss_from_logits_label_smoothing_0_1": 2.969365358352661,
+  "test_loss_from_logits_label_smoothing_0_1": 3.045351266860962
+}

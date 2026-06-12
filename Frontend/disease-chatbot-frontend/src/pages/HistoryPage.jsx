@@ -119,16 +119,14 @@ function HistoryPage() {
     if (historyApplied) {
       return {
         label: "History Applied",
-        bg: "#d1fae5",
-        color: "#065f46",
+        className: "history-status-applied",
         title: "Previous sessions influenced this prediction"
       }
     }
 
     return {
       label: "History Reviewed",
-      bg: "#e5e7eb",
-      color: "#374151",
+      className: "history-status-reviewed",
       title: "Previous sessions were checked but did not change the result"
     }
   }
@@ -139,7 +137,7 @@ function HistoryPage() {
         sessions
           .map((s) => getPredictionName(s))
           .filter((value) => value && value !== "No prediction")
-      ),
+      )
     ]
 
     return ["All", ...uniquePredictions]
@@ -200,62 +198,109 @@ function HistoryPage() {
     return "severity-badge severity-mild"
   }
 
+  const totalSessions = sessions.length
+  const visibleSessions = filteredHistory.length
+  const severeSessions = sessions.filter((session) =>
+    normalizeSymptoms(session.symptoms).some((symptom) => symptom.severity === "Severe")
+  ).length
+
+  const averageConfidence = sessions.length
+    ? Math.round(
+        sessions.reduce((sum, session) => sum + getConfidenceValue(session), 0) /
+          sessions.length
+      )
+    : 0
+
   return (
     <AppLayout>
-      <div className="history-page">
+      <div className="history-page premium-history-page">
         <PageHeader
           title="Symptom History"
           description="Review your diagnosis sessions, filter them, and inspect symptom severity patterns over time."
         />
 
-        <div className="history-filters">
-          <input
-            className="history-search"
-            type="text"
-            placeholder="Search by symptom, prediction, or severity..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="history-overview-grid">
+          <div className="history-overview-card">
+            <span>Total Sessions</span>
+            <strong>{totalSessions}</strong>
+          </div>
 
-          <select
-            className="history-select"
-            value={predictionFilter}
-            onChange={(e) => setPredictionFilter(e.target.value)}
-          >
-            {predictionOptions.map((option) => (
-              <option key={option} value={option}>
-                {formatSymptomName(option)}
-              </option>
-            ))}
-          </select>
+          <div className="history-overview-card">
+            <span>Visible Results</span>
+            <strong>{visibleSessions}</strong>
+          </div>
 
-          <select
-            className="history-select"
-            value={severityFilter}
-            onChange={(e) => setSeverityFilter(e.target.value)}
-          >
-            <option value="All">All Severity Levels</option>
-            <option value="Mild">Mild</option>
-            <option value="Moderate">Moderate</option>
-            <option value="Severe">Severe</option>
-          </select>
+          <div className="history-overview-card">
+            <span>Severe Cases</span>
+            <strong>{severeSessions}</strong>
+          </div>
 
-          <select
-            className="history-select"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-          >
-            <option value="Newest">Newest First</option>
-            <option value="Oldest">Oldest First</option>
-          </select>
+          <div className="history-overview-card">
+            <span>Avg. Confidence</span>
+            <strong>{averageConfidence}%</strong>
+          </div>
+        </div>
+
+        <div className="history-filters premium-history-filters">
+          <div className="history-filter-main">
+            <label>Search Sessions</label>
+            <input
+              className="history-search"
+              type="text"
+              placeholder="Search by symptom, prediction, or severity..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="history-filter-field">
+            <label>Prediction</label>
+            <select
+              className="history-select"
+              value={predictionFilter}
+              onChange={(e) => setPredictionFilter(e.target.value)}
+            >
+              {predictionOptions.map((option) => (
+                <option key={option} value={option}>
+                  {formatSymptomName(option)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="history-filter-field">
+            <label>Severity</label>
+            <select
+              className="history-select"
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value)}
+            >
+              <option value="All">All Severity Levels</option>
+              <option value="Mild">Mild</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Severe">Severe</option>
+            </select>
+          </div>
+
+          <div className="history-filter-field">
+            <label>Sort</label>
+            <select
+              className="history-select"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="Newest">Newest First</option>
+              <option value="Oldest">Oldest First</option>
+            </select>
+          </div>
         </div>
 
         {loading ? (
-          <div className="history-empty">
+          <div className="history-empty premium-history-empty">
             <h3>Loading history...</h3>
           </div>
         ) : filteredHistory.length > 0 ? (
-          <div className="history-list">
+          <div className="history-list premium-history-list">
             {filteredHistory.map((session) => {
               const normalizedSymptoms = normalizeSymptoms(session.symptoms)
               const predictionName = getPredictionName(session)
@@ -267,82 +312,86 @@ function HistoryPage() {
                 <Link
                   to={`/session/${session.id}`}
                   key={session.id}
-                  className="history-link-card"
+                  className="history-link-card premium-history-link"
                 >
-                  <div className="history-card advanced-history-card">
-                    <div className="history-header">
+                  <div className="history-card advanced-history-card premium-session-card">
+                    <div className="premium-session-left">
+                      <div className="premium-session-number">
+                        #{session.id}
+                      </div>
+
                       <div>
-                        <h3>Session #{session.id}</h3>
-                        <p className="history-subtitle">{session.date}</p>
+                        <h3>Diagnosis Session</h3>
+                        <p>{session.date}</p>
                       </div>
+                    </div>
 
-                      <div
-                        className="history-right-meta"
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                          alignItems: "center"
-                        }}
-                      >
-                        <span className="prediction-chip">
-                          {formatSymptomName(predictionName)}
-                        </span>
+                    <div className="premium-session-main">
+                      <div className="premium-session-title-row">
+                        <div>
+                          <span className="premium-card-label">Predicted Disease</span>
+                          <h2>{formatSymptomName(predictionName)}</h2>
+                        </div>
 
-                        <span className="score-chip">
-                          Score: {session.severityScore ?? 0}
-                        </span>
-
-                        {historyStatus && (
-                          <span
-                            title={historyStatus.title}
-                            style={{
-                              padding: "6px 12px",
-                              borderRadius: "999px",
-                              background: historyStatus.bg,
-                              color: historyStatus.color,
-                              fontSize: "12px",
-                              fontWeight: 700
-                            }}
-                          >
-                            {historyStatus.label}
+                        <div className="premium-session-badges">
+                          <span className="score-chip">
+                            Score: {session.severityScore ?? 0}
                           </span>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="history-symptoms-block">
-                      <h4>Symptoms</h4>
-                      <div className="history-symptom-tags">
-                        {normalizedSymptoms.map((item, index) => (
-                          <div key={index} className="history-symptom-tag">
-                            <span>{formatSymptomName(item.name)}</span>
-                            <strong className={getSeverityClass(item.severity)}>
-                              {item.severity}
-                            </strong>
+                          {historyStatus && (
+                            <span
+                              title={historyStatus.title}
+                              className={`history-status-chip ${historyStatus.className}`}
+                            >
+                              {historyStatus.label}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="history-symptoms-block premium-symptoms-block">
+                        <div className="premium-symptoms-title">
+                          <h4>Symptoms</h4>
+                          <span>{normalizedSymptoms.length} recorded</span>
+                        </div>
+
+                        <div className="history-symptom-tags premium-symptom-tags">
+                          {normalizedSymptoms.map((item, index) => (
+                            <div key={index} className="history-symptom-tag">
+                              <span>{formatSymptomName(item.name)}</span>
+                              <strong className={getSeverityClass(item.severity)}>
+                                {item.severity}
+                              </strong>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="premium-session-footer">
+                        <div className="premium-confidence-wrap">
+                          <div className="premium-confidence-text">
+                            <span>Confidence</span>
+                            <strong>{confidenceValue}%</strong>
                           </div>
-                        ))}
+
+                          <div className="premium-confidence-bar">
+                            <div
+                              className="premium-confidence-fill"
+                              style={{ width: `${Math.min(confidenceValue, 100)}%` }}
+                            />
+                          </div>
+
+                          {severityCondition && (
+                            <span className="premium-condition-chip">
+                              {severityCondition}
+                            </span>
+                          )}
+                        </div>
+
+                        <span className="history-footer-link">
+                          View Details
+                        </span>
                       </div>
-                    </div>
-
-                    <div
-                      className="history-footer-row"
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: "12px",
-                        flexWrap: "wrap"
-                      }}
-                    >
-                      <span className="history-footer-text">
-                        Confidence: {confidenceValue}%
-                        {severityCondition ? ` • ${severityCondition}` : ""}
-                      </span>
-
-                      <span className="history-footer-link">
-                        View Details
-                      </span>
                     </div>
                   </div>
                 </Link>
@@ -350,7 +399,7 @@ function HistoryPage() {
             })}
           </div>
         ) : (
-          <div className="history-empty">
+          <div className="history-empty premium-history-empty">
             <h3>No history found</h3>
             <p>
               Start a new diagnosis session and your personal history will appear here.

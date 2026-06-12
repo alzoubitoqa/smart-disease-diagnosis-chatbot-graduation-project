@@ -2,189 +2,242 @@ import { Link } from "react-router-dom"
 
 function LandingPage() {
   return (
-    <div className="landing-page-v3">
-      <div className="landing-overlay" />
+    <div className="lp4-page">
+      <div className="lp4-bg-orb lp4-orb-one" />
+      <div className="lp4-bg-orb lp4-orb-two" />
+      <div className="lp4-bg-grid" />
 
-      <section className="hero-section-clean">
-        <div className="hero-left-clean">
-          <div className="landing-badge">
+      <section className="lp4-hero">
+        <div className="lp4-hero-content">
+          <div className="lp4-badge">
+            <span className="lp4-badge-dot" />
             AI-Powered Medical Assistant
           </div>
 
-          <h1>Smart Disease Prediction Chatbot</h1>
+          <h1>
+            Smart Disease
+            <span> Prediction Chatbot</span>
+          </h1>
 
           <p>
-            A modern medical frontend experience that helps users describe symptoms,
-            assign severity levels, review previous diagnosis sessions, and receive
-            preliminary AI-style predictions in a clean and structured workflow.
+            A structured AI medical assistant that helps users enter symptoms,
+            assign severity levels, receive a preliminary prediction, review
+            confidence scores, and track previous diagnosis sessions.
           </p>
 
-          <div className="landing-actions">
-            <Link to="/register" className="btn primary-btn">
+          <div className="lp4-actions">
+            <Link to="/register" className="btn lp4-primary-btn">
               Get Started
             </Link>
 
-            <Link to="/login" className="btn secondary-btn">
+            <Link to="/login" className="btn lp4-secondary-btn">
               Login
             </Link>
           </div>
 
-          <div className="landing-stats">
-            <div className="landing-stat-card">
-              <h3>Structured</h3>
-              <span>Symptom workflow</span>
+          <div className="lp4-stats">
+            <div className="lp4-stat-card">
+              <strong>41+</strong>
+              <span>Disease Classes</span>
             </div>
 
-            <div className="landing-stat-card">
-              <h3>Interactive</h3>
-              <span>Diagnosis chat UI</span>
+            <div className="lp4-stat-card">
+              <strong>132</strong>
+              <span>Symptoms</span>
             </div>
 
-            <div className="landing-stat-card">
-              <h3>Trackable</h3>
-              <span>History and sessions</span>
+            <div className="lp4-stat-card">
+              <strong>1–7</strong>
+              <span>Severity Scale</span>
             </div>
           </div>
         </div>
 
-        <div className="hero-right-clean">
-          <div className="landing-preview-card">
-            <div className="preview-top">
-              <span className="preview-dot" />
-              <span className="preview-dot" />
-              <span className="preview-dot" />
+        <div className="lp4-preview-wrap">
+          <div className="lp4-preview-card">
+            <div className="lp4-preview-top">
+              <div className="lp4-window-dots">
+                <span />
+                <span />
+                <span />
+              </div>
+              <span className="lp4-preview-label">Live Preview</span>
             </div>
 
-            <div className="preview-body">
-              <div className="preview-message preview-bot">
+            <div className="lp4-preview-body">
+              <div className="lp4-chat-bubble lp4-bot-bubble">
                 Hello, I’m your AI medical assistant. Please add your symptoms.
               </div>
 
-              <div className="preview-symptoms">
-                <div className="preview-chip">Fever - Moderate</div>
-                <div className="preview-chip">Cough - Mild</div>
-                <div className="preview-chip">Fatigue - Severe</div>
+              <div className="lp4-symptom-row">
+                <span>Fever</span>
+                <b className="lp4-severity-moderate">Moderate</b>
               </div>
 
-              <div className="preview-message preview-user">
-                Send symptom set
+              <div className="lp4-symptom-row">
+                <span>Cough</span>
+                <b className="lp4-severity-mild">Mild</b>
               </div>
 
-              <div className="preview-result">
-                <h4>Prediction Result</h4>
-                <p>Influenza</p>
-                <span>Confidence: 87%</span>
+              <div className="lp4-symptom-row">
+                <span>Fatigue</span>
+                <b className="lp4-severity-severe">Severe</b>
+              </div>
+
+              <div className="lp4-send-box">
+                Analyze Symptom Set
+              </div>
+
+              <div className="lp4-result-card">
+                <div className="lp4-result-header">
+                  <span>Prediction Result</span>
+                  <b>87%</b>
+                </div>
+
+                <h3>Influenza</h3>
+
+                <div className="lp4-confidence-track">
+                  <div className="lp4-confidence-fill" />
+                </div>
+
+                <div className="lp4-top-matches">
+                  <div>
+                    <span>Influenza</span>
+                    <b>87%</b>
+                  </div>
+
+                  <div>
+                    <span>Common Cold</span>
+                    <b>72%</b>
+                  </div>
+
+                  <div>
+                    <span>Allergy</span>
+                    <b>51%</b>
+                  </div>
+                </div>
+
+                <p>
+                  Preliminary result only. Medical consultation is recommended
+                  if symptoms continue or worsen.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="how-it-works-clean">
-        <div className="how-it-works-header">
-          <div className="landing-badge">How It Works</div>
-          <h2>How the system works</h2>
+      <section className="lp4-section">
+        <div className="lp4-section-header">
+          <div className="lp4-mini-badge">How It Works</div>
+          <h2>From symptoms to structured prediction</h2>
           <p>
-            The assistant follows a clear step-by-step workflow to organize symptoms,
-            evaluate severity, and generate a preliminary medical-style result.
+            The system follows a clear workflow to organize user input, evaluate
+            severity, generate prediction results, and store diagnosis history.
           </p>
         </div>
 
-        <div className="how-it-works-grid-clean">
-          <div className="how-card">
-            <div className="how-step-number">1</div>
+        <div className="lp4-workflow">
+          <div className="lp4-step-card">
+            <div className="lp4-step-icon">01</div>
             <h3>Add Symptoms</h3>
             <p>
-              The user starts by entering symptoms manually or selecting them from the
-              quick symptom list inside the diagnosis chat.
+              The user enters symptoms manually or selects them from the
+              diagnosis interface.
             </p>
           </div>
 
-          <div className="how-card">
-            <div className="how-step-number">2</div>
+          <div className="lp4-step-card">
+            <div className="lp4-step-icon">02</div>
             <h3>Assign Severity</h3>
             <p>
-              Each symptom is given its own severity level such as Mild, Moderate, or
-              Severe to make the assessment more structured.
+              Each symptom receives its own severity level to make the case more
+              structured.
             </p>
           </div>
 
-          <div className="how-card">
-            <div className="how-step-number">3</div>
+          <div className="lp4-step-card">
+            <div className="lp4-step-icon">03</div>
             <h3>Generate Prediction</h3>
             <p>
-              The local diagnosis engine processes the symptom set and produces a
-              preliminary disease prediction with a confidence score.
+              The prediction engine analyzes the symptom set and produces a
+              preliminary result.
             </p>
           </div>
 
-          <div className="how-card">
-            <div className="how-step-number">4</div>
-            <h3>Review Results & History</h3>
+          <div className="lp4-step-card">
+            <div className="lp4-step-icon">04</div>
+            <h3>Review History</h3>
             <p>
-              The user can review the result, precautions, urgency level, and save the
-              session in the history page for later inspection.
+              The user can review previous sessions, predictions, confidence,
+              and precautions.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="features-section-clean">
-        <div className="how-it-works-header">
-          <div className="landing-badge">Key Features</div>
-          <h2>What makes this system useful</h2>
+      <section className="lp4-section lp4-features-section">
+        <div className="lp4-section-header">
+          <div className="lp4-mini-badge">Key Features</div>
+          <h2>Designed for a smarter medical workflow</h2>
           <p>
-            The frontend is designed to simulate a complete diagnosis workflow with
-            organized interactions, session tracking, and result review.
+            The interface presents the system as organized, explainable, and
+            easy to use for preliminary health guidance.
           </p>
         </div>
 
-        <div className="features-grid-clean">
-          <div className="feature-card-clean">
+        <div className="lp4-features-grid">
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">🩺</div>
             <h3>Per-Symptom Severity</h3>
             <p>
-              Each symptom can be assigned its own severity level instead of using a
-              single score for the whole case.
+              Each symptom has its own severity level instead of one general
+              score for the whole case.
             </p>
           </div>
 
-          <div className="feature-card-clean">
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">🧠</div>
+            <h3>AI Prediction Flow</h3>
+            <p>
+              The system shows a clear prediction result supported by a
+              confidence score.
+            </p>
+          </div>
+
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">📊</div>
+            <h3>Top Matches</h3>
+            <p>
+              The result can display ranked disease possibilities to make the
+              output more informative.
+            </p>
+          </div>
+
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">⚠️</div>
+            <h3>Safety-Oriented Output</h3>
+            <p>
+              The design supports warning messages and safe recommendation
+              text for users.
+            </p>
+          </div>
+
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">🕘</div>
             <h3>Diagnosis History</h3>
             <p>
-              Every submitted diagnosis session is stored and can be reviewed later
-              through a searchable history page.
+              Previous diagnosis sessions can be stored and reviewed later by
+              the user.
             </p>
           </div>
 
-          <div className="feature-card-clean">
-            <h3>Session Details View</h3>
+          <div className="lp4-feature-card">
+            <div className="lp4-feature-icon">🔐</div>
+            <h3>User Flow Ready</h3>
             <p>
-              Users can open each saved session to inspect symptoms, severity, prediction,
-              confidence, and precautions.
-            </p>
-          </div>
-
-          <div className="feature-card-clean">
-            <h3>Guided Workflow</h3>
-            <p>
-              The interface leads the user step by step, from symptom entry to result
-              interpretation and history review.
-            </p>
-          </div>
-
-          <div className="feature-card-clean">
-            <h3>Mock Authentication</h3>
-            <p>
-              The frontend includes login, registration, logout, protected routes,
-              and a forgot password screen for a realistic user flow.
-            </p>
-          </div>
-
-          <div className="feature-card-clean">
-            <h3>Backend-Ready Structure</h3>
-            <p>
-              The current frontend is prepared to connect later with a real API for
-              authentication, prediction, and session persistence.
+              The frontend supports registration, login, protected pages, and
+              session-based navigation.
             </p>
           </div>
         </div>

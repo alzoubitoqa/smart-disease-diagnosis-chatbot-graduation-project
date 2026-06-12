@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layout/AppLayout"
-import PageHeader from "../components/common/PageHeader"
 import ChatMessage from "../components/chat/ChatMessage"
 import SymptomChip from "../components/chat/SymptomChip"
 import { useAuth } from "../context/AuthContext"
@@ -68,6 +67,12 @@ function ChatPage() {
   const remainingSymptoms = useMemo(() => {
     return Math.max(0, MIN_REQUIRED_SYMPTOMS - symptoms.length)
   }, [symptoms.length])
+
+  const progressPercent = useMemo(() => {
+    if (chatStage === "diagnosed") return 100
+    if (chatStage === "collecting_severity") return 68
+    return Math.min(45, (symptoms.length / MIN_REQUIRED_SYMPTOMS) * 45)
+  }, [chatStage, symptoms.length])
 
   const normalizeText = (text) => {
     return String(text || "")
@@ -380,9 +385,9 @@ function ChatPage() {
     if (!predictions.length) return null
 
     return (
-      <div>
-        <strong>Top 3 Possible Conditions:</strong>
-        <ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
+      <div className="chat-result-section">
+        <strong>Top 3 Possible Conditions</strong>
+        <ul>
           {predictions.slice(0, 3).map((item, index) => (
             <li key={index}>
               {formatSymptomName(item.disease)} ({((item.confidence || 0) * 100).toFixed(2)}%)
@@ -401,116 +406,128 @@ function ChatPage() {
     const mergedSequence = result.merged_sequence || []
 
     return (
-      <div className="workflow-card" style={{ marginTop: "20px" }}>
-        <h3>{title}</h3>
-
-        <div style={{ display: "grid", gap: "12px" }}>
+      <div className="chat-result-card">
+        <div className="chat-result-top">
           <div>
-            {isLowConfidence ? (
-              <>
-                <strong>Possible Condition:</strong> {formatSymptomName(result.predicted_disease)}
-                <span style={{ color: "orange", marginLeft: "8px", fontWeight: "600" }}>
-                  (Low Confidence)
-                </span>
-              </>
-            ) : (
-              <>
-                <strong>Disease:</strong> {formatSymptomName(result.predicted_disease)}
-              </>
+            <span className="chat-section-badge">{title}</span>
+            <h3>{formatSymptomName(result.predicted_disease)}</h3>
+          </div>
+
+          <div className="chat-confidence-badge">
+            {result.confidence_percentage ?? 0}%
+          </div>
+        </div>
+
+        <div className="chat-confidence-bar">
+          <div
+            className="chat-confidence-fill"
+            style={{ width: `${Math.min(Number(result.confidence_percentage || 0), 100)}%` }}
+          />
+        </div>
+
+        {isLowConfidence && (
+          <div className="chat-warning-box">
+            This prediction has low confidence. Please consider the top possible
+            conditions below and do not treat this result as a final diagnosis.
+          </div>
+        )}
+
+        {result.mode === "history_aware" && result.history_used && (
+          <div className="chat-info-box">
+            <strong>History Applied</strong>
+
+            {historySymptomsUsed.length > 0 && (
+              <p>
+                Previous Symptoms Used:{" "}
+                {historySymptomsUsed
+                  .map((item) => formatSymptomName(item.symptom))
+                  .join(", ")}
+              </p>
+            )}
+
+            {mergedSequence.length > 0 && (
+              <p>
+                Final Sequence:{" "}
+                {mergedSequence
+                  .map((item) => formatSymptomName(item.symptom))
+                  .join(", ")}
+              </p>
             )}
           </div>
+        )}
 
-          <div>
-            <strong>Confidence:</strong> {result.confidence_percentage ?? 0}%
+        {renderTopPredictions(result.top_k_predictions)}
+
+        <div className="chat-result-grid">
+          <div className="chat-result-section">
+            <strong>Description</strong>
+            <p>{result.description}</p>
           </div>
 
-          {isLowConfidence && (
-            <div
-              style={{
-                padding: "10px 12px",
-                borderRadius: "10px",
-                background: "#fff8e6",
-                color: "#8a5a00",
-                fontWeight: "500"
-              }}
-            >
-              This prediction has low confidence. Please consider the top possible conditions below and do not treat this result as a final diagnosis.
-            </div>
-          )}
-
-          {result.mode === "history_aware" && result.history_used && (
-            <div
-              style={{
-                padding: "10px 12px",
-                borderRadius: "10px",
-                background: "#eef6ff",
-                color: "#174a7c"
-              }}
-            >
-              <strong>History Applied:</strong>
-
-              {historySymptomsUsed.length > 0 && (
-                <div style={{ marginTop: "6px" }}>
-                  <div>
-                    Previous Symptoms Used:
-                    <br />
-                    {historySymptomsUsed
-                      .map((item) => formatSymptomName(item.symptom))
-                      .join(", ")}
-                  </div>
-                </div>
-              )}
-
-              {mergedSequence.length > 0 && (
-                <div style={{ marginTop: "6px" }}>
-                  <div>
-                    Final Sequence (History + Current):
-                    <br />
-                    {mergedSequence
-                      .map((item) => formatSymptomName(item.symptom))
-                      .join(", ")}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {renderTopPredictions(result.top_k_predictions)}
-
-          <div>
-            <strong>Description:</strong>
-            <p style={{ marginTop: "6px" }}>{result.description}</p>
-          </div>
-
-          <div>
-            <strong>Precautions:</strong>
-            <ul style={{ marginTop: "6px", paddingLeft: "18px" }}>
+          <div className="chat-result-section">
+            <strong>Precautions</strong>
+            <ul>
               {(result.precautions || []).map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
           </div>
-
-          {result.severity_summary && (
-            <div>
-              <strong>Severity Summary:</strong>
-              <p style={{ marginTop: "6px" }}>
-                Total: {result.severity_summary.total} | Avg: {result.severity_summary.avg} | Condition: {result.severity_summary.condition}
-              </p>
-            </div>
-          )}
         </div>
+
+        {result.severity_summary && (
+          <div className="chat-severity-summary">
+            <span>Total: {result.severity_summary.total}</span>
+            <span>Avg: {result.severity_summary.avg}</span>
+            <span>Condition: {result.severity_summary.condition}</span>
+          </div>
+        )}
       </div>
     )
   }
 
   return (
     <AppLayout>
-      <div className="chat-page">
-        <PageHeader
-          title="Diagnosis Chat"
-          description="The system first collects symptoms, then asks for severity, then generates diagnosis results."
-        />
+      <div className="chat-page premium-chat-page">
+        <div className="chat-hero">
+          <div>
+            <span className="chat-section-badge">AI Diagnosis Workflow</span>
+            <h1>Diagnosis Chat</h1>
+            <p>
+              Add symptoms, assign severity from 1 to 7, then generate a
+              structured preliminary prediction result.
+            </p>
+          </div>
+
+          <button className="action-btn chat-new-session-btn" onClick={handleNewSession}>
+            New Session
+          </button>
+        </div>
+
+        <div className="chat-progress-card">
+          <div className="chat-progress-steps">
+            <div className={`chat-progress-step ${chatStage === "collecting_symptoms" ? "active" : ""}`}>
+              <span>1</span>
+              <strong>Symptoms</strong>
+            </div>
+
+            <div className={`chat-progress-step ${chatStage === "collecting_severity" ? "active" : ""}`}>
+              <span>2</span>
+              <strong>Severity</strong>
+            </div>
+
+            <div className={`chat-progress-step ${chatStage === "diagnosed" ? "active" : ""}`}>
+              <span>3</span>
+              <strong>Result</strong>
+            </div>
+          </div>
+
+          <div className="chat-progress-track">
+            <div
+              className="chat-progress-fill"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
 
         <div className="chat-layout">
           <div className="chat-wrapper">
@@ -526,10 +543,6 @@ function ChatPage() {
                     : "Diagnosis Completed"}
                 </span>
               </div>
-
-              <button className="action-btn" onClick={handleNewSession}>
-                New Session
-              </button>
             </div>
 
             <div className="chat-messages conversation-start">
@@ -549,14 +562,24 @@ function ChatPage() {
             </div>
 
             {(chatStage === "collecting_symptoms" || chatStage === "collecting_severity") && (
-              <div className="workflow-card">
-                <h3>Collected Symptoms</h3>
+              <div className="workflow-card premium-selected-card">
+                <div className="chat-card-title-row">
+                  <div>
+                    <span className="chat-section-badge">Selected Input</span>
+                    <h3>Collected Symptoms</h3>
+                  </div>
+
+                  <span className="chat-count-chip">
+                    {symptoms.length}/{MIN_REQUIRED_SYMPTOMS} minimum
+                  </span>
+                </div>
 
                 {symptoms.length > 0 ? (
                   <div className="selected-symptoms-preview">
                     {symptoms.map((item) => (
                       <div key={item.name} className="selected-symptom-item">
-                        {item.label} - {item.severity}
+                        <span>{item.label}</span>
+                        <strong>Severity {item.severity}</strong>
                       </div>
                     ))}
                   </div>
@@ -577,8 +600,13 @@ function ChatPage() {
             )}
 
             {chatStage === "collecting_symptoms" && (
-              <div className="workflow-card">
-                <h3>Step 1: Add Symptoms</h3>
+              <div className="workflow-card premium-add-card">
+                <div className="chat-card-title-row">
+                  <div>
+                    <span className="chat-section-badge">Step 1</span>
+                    <h3>Add Symptoms</h3>
+                  </div>
+                </div>
 
                 <div className="symptom-builder-top">
                   <input
@@ -588,6 +616,7 @@ function ChatPage() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                   />
+
                   <button className="action-btn" onClick={addCustomSymptom}>
                     Add Symptom
                   </button>
@@ -617,7 +646,7 @@ function ChatPage() {
                 </div>
 
                 {symptoms.length >= MIN_REQUIRED_SYMPTOMS && (
-                  <div style={{ marginTop: "14px" }}>
+                  <div className="chat-step-actions">
                     <button
                       className="action-btn"
                       onClick={() => setChatStage("collecting_severity")}
@@ -630,8 +659,17 @@ function ChatPage() {
             )}
 
             {chatStage === "collecting_severity" && (
-              <div className="workflow-card">
-                <h3>Step 2: Set Numeric Severity for Each Symptom</h3>
+              <div className="workflow-card premium-severity-card">
+                <div className="chat-card-title-row">
+                  <div>
+                    <span className="chat-section-badge">Step 2</span>
+                    <h3>Set Numeric Severity for Each Symptom</h3>
+                  </div>
+
+                  <div className="severity-score-box">
+                    Score: <strong>{getSeverityScore()}</strong>
+                  </div>
+                </div>
 
                 {symptoms.length > 0 ? (
                   <div className="symptom-severity-list">
@@ -648,13 +686,13 @@ function ChatPage() {
                               updateSeverity(symptom.name, e.target.value)
                             }
                           >
-                            <option value={1}>1</option>
-                            <option value={2}>2</option>
-                            <option value={3}>3</option>
-                            <option value={4}>4</option>
-                            <option value={5}>5</option>
-                            <option value={6}>6</option>
-                            <option value={7}>7</option>
+                            <option value={1}>1 - Very Mild</option>
+                            <option value={2}>2 - Mild</option>
+                            <option value={3}>3 - Low Moderate</option>
+                            <option value={4}>4 - Moderate</option>
+                            <option value={5}>5 - Noticeable</option>
+                            <option value={6}>6 - Strong</option>
+                            <option value={7}>7 - Severe</option>
                           </select>
 
                           <button
@@ -673,23 +711,17 @@ function ChatPage() {
                   </div>
                 )}
 
-                <div className="chat-actions-top">
-                  <div className="severity-score-box">
-                    Severity Score: <strong>{getSeverityScore()}</strong>
-                  </div>
+                <div className="chat-final-actions premium-final-actions">
+                  <button onClick={handleAddMoreSymptoms}>
+                    Add More Symptoms
+                  </button>
 
-                  <div className="chat-final-actions" style={{ display: "flex", gap: "10px" }}>
-                    <button onClick={handleAddMoreSymptoms}>
-                      Add More Symptoms
-                    </button>
-
-                    <button
-                      onClick={sendMessage}
-                      disabled={symptoms.length < MIN_REQUIRED_SYMPTOMS}
-                    >
-                      Confirm and Diagnose
-                    </button>
-                  </div>
+                  <button
+                    onClick={sendMessage}
+                    disabled={symptoms.length < MIN_REQUIRED_SYMPTOMS}
+                  >
+                    Confirm and Diagnose
+                  </button>
                 </div>
               </div>
             )}
@@ -699,7 +731,7 @@ function ChatPage() {
                 {renderResultCard("Current Session Prediction", currentResult)}
 
                 {historyStatusMessage && (
-                  <div className="workflow-card" style={{ marginTop: "20px" }}>
+                  <div className="workflow-card chat-info-box" style={{ marginTop: "20px" }}>
                     <h3>History-Aware Prediction</h3>
                     <p className="chat-note">{historyStatusMessage}</p>
                   </div>
@@ -711,11 +743,26 @@ function ChatPage() {
             )}
           </div>
 
-          <div className="chat-sidebar-card">
-            <h3>Workflow Note</h3>
-            <p className="chat-note">
-              Stage 1: collect symptoms. Stage 2: assign severity. Stage 3: review diagnosis.
-            </p>
+          <div className="chat-sidebar-card premium-chat-sidebar">
+            <span className="chat-section-badge">Workflow</span>
+            <h3>Session Progress</h3>
+
+            <div className="sidebar-progress-list">
+              <div className={chatStage === "collecting_symptoms" ? "active" : ""}>
+                <span>1</span>
+                <p>Collect symptoms</p>
+              </div>
+
+              <div className={chatStage === "collecting_severity" ? "active" : ""}>
+                <span>2</span>
+                <p>Assign severity</p>
+              </div>
+
+              <div className={chatStage === "diagnosed" ? "active" : ""}>
+                <span>3</span>
+                <p>Review diagnosis</p>
+              </div>
+            </div>
 
             <h3>Current Status</h3>
             <p className="chat-note">
@@ -732,7 +779,8 @@ function ChatPage() {
               {symptoms.length > 0 ? (
                 symptoms.map((item) => (
                   <div key={item.name} className="selected-symptom-item">
-                    {item.label} - {item.severity}
+                    <span>{item.label}</span>
+                    <strong>{item.severity}</strong>
                   </div>
                 ))
               ) : (

@@ -1,175 +1,200 @@
-# A Smart Chatbot System for Diagnosing Diseases
+<div align="center">
 
+# 🩺 A Smart Chatbot System for Diagnosing Diseases
 
-**Author:** Toqa Mahmoud Tawfiq Al-Zoubi
+### Severity-Aware Deep Learning for Preliminary Disease Prediction
 
-**Supervisor:** Prof. Abdelwadood Mesleh
+**From reported symptoms to explainable, safety-conscious prediction support.**
 
-**Program:** Artificial Intelligence and Robotics
+An end-to-end AI research and software engineering project combining an enhanced **BiLSTM**, symptom severity encoding, confidence-aware inference, a disease knowledge base, and an interactive web chatbot.
 
-**Version:** v1.0 Final Release
+[![Release](https://img.shields.io/badge/Release-v1.0%20Final-2563EB?style=for-the-badge&labelColor=14213D)](#project-information)
+[![Research](https://img.shields.io/badge/Domain-Healthcare%20AI-14B8A6?style=for-the-badge&labelColor=14213D)](#research-overview)
+[![Model](https://img.shields.io/badge/Model-Enhanced%20BiLSTM-8B5CF6?style=for-the-badge&labelColor=14213D)](#model-architecture)
+[![Stack](https://img.shields.io/badge/Stack-FastAPI%20%2B%20React-F59E0B?style=for-the-badge&labelColor=14213D)](#technology-stack)
 
-**Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi**
+**[Overview](#research-overview) · [Features](#system-capabilities) · [Model](#model-architecture) · [Evaluation](#dataset--experimental-evaluation) · [Run locally](#getting-started)**
 
---- 
-An AI-powered medical diagnosis support system designed to predict possible diseases based on user-reported symptoms and symptom severity levels using deep learning techniques.
+</div>
 
-The system combines a BiLSTM-based prediction model, symptom severity analysis, disease knowledge-base integration, user session history, and a chatbot interface to provide intelligent healthcare support.
-
----
-
-# Project Information
-
-**Project Title:**
-A Smart Chatbot System for Diagnosing Diseases
-
-**Field:**
-Artificial Intelligence in Healthcare
-
-**Academic Program:**
-Artificial Intelligence and Robotics
-
-**Supervisor:**
-Prof. Abdelwadood Mesleh
+> [!IMPORTANT]
+> **Medical safety:** This is an **educational and research prototype** for preliminary symptom-based prediction. It is **not** a clinically validated diagnostic device, cannot confirm or rule out a condition, and must not be used instead of professional medical evaluation or emergency care.
 
 ---
 
-# Author
+## Project information
 
-## System Design and Implementation
+| | |
+| --- | --- |
+| **Official title** | A Smart Chatbot System for Diagnosing Diseases |
+| **Research area** | Artificial Intelligence in Healthcare |
+| **Academic program** | B.Sc. Artificial Intelligence and Robotics |
+| **Institution** | Al-Balqa Applied University |
+| **Author** | **Toqa Mahmoud Tawfiq Al-Zoubi** |
+| **Supervisor** | **Prof. Abdelwadood Mesleh** |
+| **Version** | v1.0 — Final Release |
+| **Copyright** | © 2026 Toqa Mahmoud Tawfiq Al-Zoubi |
 
-**Toqa Mahmoud Tawfiq Al-Zoubi**
+## Research overview
 
-The implementation presented in this repository includes:
+Many symptom-checking systems rely on a simple list of symptoms. This project explores whether combining **symptom identity** and **reported severity** in a deep learning model can provide more informative preliminary disease predictions.
 
-- System architecture design
-- Backend development
-- Frontend development
-- Database integration
-- Deep learning model implementation
-- Data preprocessing pipeline
-- Disease prediction engine
-- Knowledge-base integration
-- User authentication system
-- Session-history management
-- API development and testing
-- Deployment preparation
-- Technical documentation
+The application is designed as a complete workflow — not just a trained notebook. It connects a predictive model to a web interface, secured user accounts, session history, knowledge-base descriptions, and cautionary messages for uncertain results.
 
----
+### The central research idea
 
-# Project Overview
+**Symptoms + severity → enhanced BiLSTM → disease probabilities → confidence-aware response**
 
-The Smart Disease Diagnosis Chatbot is an intelligent healthcare support system that assists users in identifying possible diseases based on their symptoms and severity levels.
+A prediction response can include:
 
-The system utilizes a Bidirectional Long Short-Term Memory (BiLSTM) neural network trained on disease-symptom datasets to predict potential medical conditions.
+- A predicted disease category and its model confidence
+- Ranked alternative disease candidates (**Top-K**)
+- Disease information and general precautions retrieved from a knowledge base
+- Low-confidence warnings and basic severity-oriented safety notices
+- Session history and history-assisted support when prediction confidence is low
 
-The chatbot provides:
+## System capabilities
 
-- Predicted disease
-- Confidence score
-- Ranked disease candidates
-- Disease description
-- Recommended precautions
-- Symptom severity analysis
-- Session-aware support
-- History-aware prediction
-- Safety-oriented medical guidance
+| Area | Functionality |
+| --- | --- |
+| 👤 **Accounts & profiles** | Registration, login, JWT-based authentication, and profile management |
+| 💬 **Symptom chatbot** | User-friendly input of symptoms and individual severity values |
+| 🧠 **Prediction engine** | Enhanced BiLSTM classification and ranked disease probabilities |
+| 📊 **Confidence awareness** | Confidence scores, alternative predictions, and uncertainty warnings |
+| 🧩 **History-assisted prediction** | Uses relevant prior symptoms as fallback context under a low-confidence condition |
+| 📖 **Knowledge base** | Retrieves disease descriptions and general precaution information |
+| ⚠️ **Safety signals** | Severity-based notices and guidance to seek professional attention when appropriate |
+| 🗃️ **History & sessions** | Stores sessions and earlier prediction results |
+| 🌐 **Web application** | React frontend connected to a FastAPI REST backend |
 
-This system is intended as a decision-support tool and does not replace professional medical diagnosis.
+## How the system works
 
----
+```mermaid
+flowchart TD
+    A["User enters symptoms + severity (1–7)"] --> B["React chatbot interface"]
+    B --> C["FastAPI prediction endpoint"]
+    C --> D["Normalize + encode + pad inputs"]
+    D --> E["Enhanced BiLSTM + attention"]
+    E --> F["Disease probabilities + Top-K"]
+    F --> G{"Confidence sufficient?"}
+    G -->|Yes| H["Primary prediction"]
+    G -->|Low| I["History-assisted context / warning"]
+    I --> H
+    H --> J["Knowledge base + safety notices"]
+    J --> K["Result view + session history"]
+```
 
-# Main Features
+### Confidence-aware behavior
 
-### User Features
+The implementation uses a decision threshold for history-assisted fallback when the primary prediction confidence is below **0.35**. Previously reported symptoms can be combined while filtering duplicates and avoiding dependence on the order in which the user entered them.
 
-- User registration and login
-- Secure authentication
-- User profile management
-- Symptom selection interface
-- Symptom severity selection
-- Disease prediction
-- Disease explanation
-- Precaution recommendations
-- Prediction history tracking
+The resulting confidence is a **model output**, not a calibrated clinical probability.
 
-### AI Features
+## Model architecture
 
-- BiLSTM-based disease prediction
-- Symptom-severity encoding
-- Confidence-based classification
-- Ranked prediction generation
-- History-aware inference
-- Emergency symptom detection
-- Low-confidence warning system
+The final prediction engine uses an enhanced **Bidirectional Long Short-Term Memory (BiLSTM)** network.
 
-### System Features
+| Component | Purpose |
+| --- | --- |
+| **Symptom embeddings** | Convert categorical symptom tokens into trainable vector representations |
+| **Severity channel** | Encode severity values alongside symptom information |
+| **Stacked BiLSTM layers** | Learn bidirectional representations of the encoded input |
+| **Attention mechanism** | Weight learned representations for classification |
+| **Residual / normalization layers** | Support representation flow and training stability |
+| **Regularization** | Dropout, recurrent dropout, and L2 penalty to reduce overfitting |
+| **Classification head** | Produce probabilities across the supported disease categories |
 
-- FastAPI backend
-- React frontend
-- SQLite database
-- REST API architecture
-- Knowledge-base integration
-- Modular software architecture
-- Swagger API documentation
+The documented stacked recurrent layers use **128** and **64** units.
 
----
+### Training configuration
 
-# Technology Stack
+| Setting | Value |
+| --- | --- |
+| Optimizer | Adam |
+| Learning rate | `0.001` |
+| Batch size | `64` |
+| Epochs | `156` |
+| Dropout | `0.4` |
+| Recurrent dropout | `0.3` |
+| L2 regularization | `0.0005` |
 
-## Backend
+The research workflow also explored **Simple RNN**, **Vanilla LSTM**, and **Deep LSTM** baselines before selecting the enhanced architecture.
 
-- Python 3.10
-- FastAPI
-- Uvicorn
-- TensorFlow
-- Keras
-- SQLite
-- Pydantic
-- JWT Authentication
-- Bcrypt
-- Python-dotenv
+## Dataset & experimental evaluation
 
-## Frontend
+### Dataset profile
 
-- React
-- Vite
-- Axios
-- React Router DOM
+| Property | Reported value |
+| --- | ---: |
+| Samples | **4,920** |
+| Disease categories | **41** |
+| Unique symptoms | **132** |
+| Maximum symptom positions | **17** |
+| Symptom vocabulary including special tokens | **134** |
+| Severity input range | **1–7** |
 
-## Artificial Intelligence
+### Order-independent strict split
 
-- Deep Learning
-- Bidirectional LSTM (BiLSTM)
-- Symptom Encoding
-- Severity Encoding
-- Sequence Classification
-- Confidence Scoring
+The dataset was partitioned using symptom–severity pattern grouping to avoid placing equivalent patterns, with different input orders, on both sides of the training/test boundary.
 
----
+| Partition | Samples | Unique pattern groups |
+| --- | ---: | ---: |
+| Training | 3,193 | 215 |
+| Validation | 960 | 45 |
+| Test | 767 | 45 |
+| **Total** | **4,920** | **305** |
 
-# Project Structure
+**Reported group overlap between partitions: zero.**
+
+### Reported model results
+
+| Evaluation | Result |
+| --- | ---: |
+| Strict held-out test accuracy | **100%** (767 / 767) |
+| 4-fold group K-fold mean accuracy | **99.04%** |
+| 4-fold group K-fold mean macro F1 | **98.67%** |
+| Top-2 / Top-3 / Top-5 on strict test | **100%** |
+
+> [!NOTE]
+> These are **internal experimental results on the project's curated dataset**, not estimates of diagnostic performance on real patients. The small number of distinct symptom–severity patterns, dataset provenance, class coverage, severity assumptions, calibration, and external validation are important limitations. Such results must not be interpreted as clinical accuracy.
+
+## Full-stack architecture
+
+```mermaid
+flowchart TB
+    U["React + Vite frontend"] --> API["FastAPI REST backend"]
+    API --> AUTH["JWT authentication + user profile"]
+    API --> PRE["Preprocessing + prediction service"]
+    PRE --> MODEL["TensorFlow / Keras BiLSTM"]
+    API --> KB["Disease knowledge base"]
+    API --> DB[("SQLite: sessions + history")]
+    MODEL --> RES["Ranked results + confidence"]
+    KB --> RES
+    RES --> U
+```
+
+### Technology stack
+
+| Layer | Technologies |
+| --- | --- |
+| **Deep learning** | Python, TensorFlow, Keras, BiLSTM, Attention |
+| **Backend** | FastAPI, Uvicorn, Pydantic |
+| **Frontend** | React, Vite, Axios, React Router DOM |
+| **Persistence** | SQLite |
+| **Security & configuration** | JWT, bcrypt, python-dotenv |
+| **API exploration** | OpenAPI / Swagger UI |
+
+## Repository layout
 
 ```text
-Backend
-│
-├── .venv/
-├── artifacts/
-├── data/
-├── DiagnoSeq/
-│
-├── docs/
-│   ├── core_workflow.txt
-│   ├── delet_command.txt
-│   ├── final result.docx
-│   ├── initial_plan.docx
-│   └── project_steps.docx
-│
-├── Frontend/
-│
+Backend/
+├── artifacts/            # Model and preprocessing artifacts
+├── data/                 # Data files
+├── DiagnoSeq/             # Model-related project material
+├── docs/                 # Technical documents and project notes
+├── Frontend/             # React/Vite application
 ├── src/
-│   ├── api/
+│   ├── api/              # HTTP endpoints
 │   ├── artifacts/
 │   ├── chatbot/
 │   ├── core/
@@ -180,213 +205,135 @@ Backend
 │   ├── repositories/
 │   ├── schemas/
 │   ├── services/
-│   ├── visualization/
-│   └── __init__.py
-│
+│   └── visualization/
 ├── tests/
-│
-├── .env
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
 └── run.py
 ```
 
----
+**Security note:** Local environments and secrets (such as `.venv/` and `.env`) should remain untracked.
 
-# System Workflow
+## Core application modules
 
-### Step 1
+| Module | Responsibility |
+| --- | --- |
+| **Authentication** | Registration, password hashing, login, and token handling |
+| **Profile** | User information and account-associated session context |
+| **Preprocessing** | Symptom normalization, encoding, severity processing, and padding |
+| **Prediction** | BiLSTM inference, confidence scores, and ranked alternatives |
+| **History** | Stored sessions, previous results, and history-assisted context |
+| **Knowledge base** | Disease descriptions, precautions, and supporting information |
+| **API** | Request validation and communication with the React frontend |
 
-The user enters symptoms through the chatbot interface.
+## Getting started
 
-### Step 2
+### Requirements
 
-The user assigns severity levels to each selected symptom.
+- Python **3.10**
+- Node.js and npm (for the frontend)
+- The trained model and preprocessing artifacts required by the backend
 
-### Step 3
+### 1 · Backend setup
 
-The frontend sends the data to the FastAPI backend.
+From the `Backend` directory, create a virtual environment and install dependencies.
 
-### Step 4
+**Windows PowerShell**
 
-The preprocessing module transforms symptoms and severity values into encoded sequences.
-
-### Step 5
-
-The BiLSTM model processes the encoded symptom sequence.
-
-### Step 6
-
-The prediction engine generates disease probabilities.
-
-### Step 7
-
-The system calculates:
-
-- Predicted disease
-- Confidence score
-- Alternative predictions
-
-### Step 8
-
-The knowledge base retrieves:
-
-- Disease description
-- Recommended precautions
-
-### Step 9
-
-The chatbot presents the final response to the user.
-
----
-
-# Core Components
-
-## Authentication Module
-
-Responsible for:
-
-- Registration
-- Login
-- Password hashing
-- JWT token generation
-
----
-
-## Profile Module
-
-Responsible for:
-
-- User information
-- Medical profile data
-- Session ownership
-
----
-
-## Prediction Module
-
-Responsible for:
-
-- Symptom processing
-- Severity processing
-- Disease prediction
-- Confidence calculation
-
----
-
-## History Module
-
-Responsible for:
-
-- Session storage
-- Previous predictions
-- History-aware prediction support
-
----
-
-## Knowledge Base
-
-Responsible for:
-
-- Disease descriptions
-- Disease precautions
-- Safety-oriented guidance
-
----
-
-# Dataset
-
-The model was trained using disease-symptom datasets containing:
-
-- Disease names
-- Symptom combinations
-- Symptom severity information
-- Disease descriptions
-- Precaution recommendations
-
-The final system supports prediction across multiple disease categories represented within the training dataset.
-
----
-
-# Model Architecture
-
-The prediction engine is based on an enhanced BiLSTM architecture that processes:
-
-- Symptom sequences
-- Severity sequences
-
-Model capabilities include:
-
-- Long-term dependency learning
-- Bidirectional context understanding
-- Confidence-based prediction
-- Medical sequence classification
-
----
-
-# Running the Project
-
-## Install Dependencies
-
-```bash
+```powershell
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-## Start Backend
+**macOS / Linux**
+
+```bash
+python3.10 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Configure any project-required environment variables and artifact paths before starting the server. **Never commit real secrets to GitHub.**
+
+Start the backend with either of the documented entry points:
 
 ```bash
 python run.py
 ```
 
-or
+Or:
 
 ```bash
 uvicorn src.api.main:app --reload
 ```
 
----
+Backend / interactive API documentation (when running on port 8000):
 
-# API Documentation
+**http://localhost:8000/docs**
 
-After running the backend:
+### 2 · Frontend setup
 
-```text
-http://localhost:8000/docs
+In a second terminal, open the React application directory:
+
+```bash
+cd Frontend
+npm install
+npm run dev
 ```
 
-Swagger documentation provides full access to all available API endpoints.
+Vite commonly starts at **http://localhost:5173**. Confirm the displayed URL and the frontend's configured API base URL in your local environment.
 
----
+### 3 · Try the workflow
 
-# Important Notice
+1. Register or sign in.
+2. Open the chatbot and enter symptoms.
+3. Select severity values for the symptoms.
+4. Request a prediction and examine the top candidates.
+5. Read the result's uncertainty notices and general disease information.
+6. Review the saved session and prediction history.
 
-This project is intended for:
+## Research limitations & responsible use
 
-- Educational purposes
-- Research purposes
-- Artificial Intelligence experimentation
+- **Not a diagnosis:** Symptom patterns can overlap across many unrelated conditions.
+- **Dataset coverage:** The model predicts only among classes represented by its training setup.
+- **Severity assumptions:** The meaning and source of severity values require careful documentation.
+- **Confidence limitations:** Softmax-like model confidence is not proof of medical likelihood.
+- **General precautions:** Knowledge-base advice is informational, not patient-specific treatment.
+- **No clinical validation:** Deployment as a real medical device would require extensive external and clinical evaluation, safety engineering, and regulatory review.
 
-The generated predictions should not be considered medical diagnoses and must not replace professional healthcare consultation.
+For urgent symptoms, users should seek appropriate professional or emergency medical care instead of relying on chatbot output.
 
----
+## Authorship & academic attribution
 
-# Copyright
+**System design and implementation presented in this repository:**  
+**Toqa Mahmoud Tawfiq Al-Zoubi**
 
-© 2026 Toqa Mahmoud Tawfiq Al-Zoubi
+**Academic supervisor:**  
+**Prof. Abdelwadood Mesleh**
 
-All source-code implementation, system integration, architecture development, machine-learning pipeline implementation, backend services, frontend integration, and technical documentation contained in this repository are attributed to the author listed above.
+The repository documents work across architecture, data preprocessing, model implementation, prediction APIs, frontend/backend integration, authentication, persistence, testing, and technical documentation.
 
-## License
+## Copyright & license
 
-Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi
-
-All Rights Reserved.
+**Copyright © 2026 Toqa Mahmoud Tawfiq Al-Zoubi. All Rights Reserved.**
 
 Unauthorized copying, redistribution, modification, publication, reproduction, or use of this project, in whole or in part, without prior written permission from the author is prohibited.
 
 This repository is maintained as the official implementation archive of the graduation project:
 
-"A Smart Chatbot System for Diagnosing Diseases"
+**“A Smart Chatbot System for Diagnosing Diseases” — v1.0 Final Release**
 
-Version: v1.0 Final Release
+---
+
+<div align="center">
+
+### 🩺 AI Research · Healthcare Support · Full-Stack Engineering
+
+*Exploring how intelligent models can become accessible, responsible software systems.*
+
+**Toqa Mahmoud Tawfiq Al-Zoubi** · 2026
+
+</div>
+
